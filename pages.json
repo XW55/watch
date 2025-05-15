@@ -1,0 +1,52 @@
+{
+  "pages": [{
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/demo/demo",
+      "style": {
+        "navigationBarTitleText": "示例"
+      }
+    },
+    {
+      "path": "pages/connect/connect",
+      "style": {
+        "navigationBarTitleText": "连接"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "navigationStyle": "default" // 或者 "custom" 如果使用自定义导航栏
+  },
+  "tabBar": {
+    "color": "#999999", // 未选中时的文字颜色
+    "selectedColor": "#FF0000", // 选中时的颜色
+    "list": [{
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabs/home.png", // 本地图片路径（非绝对路径）
+        "selectedIconPath": "static/tabs/home_active.png"
+      },
+      {
+        "pagePath": "pages/demo/demo",
+        "text": "示例",
+        "iconPath": "static/tabs/demo.png",
+        "selectedIconPath": "static/tabs/demo_active.png"
+      }, {
+        "pagePath": "pages/connect/connect",
+        "text": "连接",
+        "iconPath": "static/tabs/demo.png",
+        "selectedIconPath": "static/tabs/demo_active.png"
+      }
+    ],
+    "borderStyle": "white", // 可选值：white / black
+    "backgroundColor": "#FFFFFF"
+  },
+  "uniIdRouter": {}
+}
