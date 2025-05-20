@@ -2,6 +2,12 @@
 
 let buffer = [];
 let onDataCallback = null;
+// 在外部维护数据缓冲区
+const PPG_BUFFER = {
+  red: [],
+  infrared: [],
+  maxLength: 125 // 1秒数据（125Hz采样率）
+};
 
 export function setOnDataParsed(callback) {
   onDataCallback = callback;
@@ -49,50 +55,48 @@ export function processIncomingData(data) {
 function parsePPGData(bufferArray) {
   const view = new DataView(new Uint8Array(bufferArray).buffer);
 
-  // 基础校验
+  // 校验帧头与长度
   if (view.byteLength < 177) throw new Error("数据长度不足177字节");
-  if (view.getUint8(0) !== 0x00 || view.getUint8(1) !== 0xAA ||
-    view.getUint8(2) !== 0x00 || view.getUint8(3) !== 0xCC) {
+  if (
+    view.getUint8(0) !== 0x00 ||
+    view.getUint8(1) !== 0xAA ||
+    view.getUint8(2) !== 0x00 ||
+    view.getUint8(3) !== 0xCC
+  ) {
     throw new Error("帧头校验失败");
   }
 
   const parsedData = {
     deviceId: [
-      view.getUint8(4).toString(16).padStart(2, '0'),
-      view.getUint8(5).toString(16).padStart(2, '0'),
-      view.getUint8(6).toString(16).padStart(2, '0'),
-      view.getUint8(7).toString(16).padStart(2, '0')
-    ].join(''),
+      view.getUint8(4),
+      view.getUint8(5),
+      view.getUint8(6),
+      view.getUint8(7)
+    ].map(b => b.toString(16).padStart(2, "0")).join(""),
     dataType: view.getUint8(8),
     timestamp: view.getUint16(9, false), // 大端序
-    red: [
-      [],
-      [],
-      [],
-      []
-    ], // 4通道红光，每通道5个采样点
-    infrared: [
-      [],
-      [],
-      [],
-      []
-    ], // 4通道红外光
+    red: Array.from({
+      length: 4
+    }, () => []),
+    infrared: Array.from({
+      length: 4
+    }, () => []),
     acc: {
       x: 0,
       y: 0,
       z: 0
-    }
+    },
+    SpO2: null,
   };
 
-  // --------------- 解析PPG数据 ---------------
-  // 红光数据：从偏移11开始，共80字节（4通道×5采样点×4字节）
+  // 解析红光数据
   for (let channel = 0; channel < 4; channel++) {
     for (let sample = 0; sample < 5; sample++) {
       const offset = 11 + (channel * 5 + sample) * 4;
       const status = view.getUint8(offset);
-      const value = (view.getUint8(offset + 1) << 16) |
+      const value = ((view.getUint8(offset + 1) << 16) |
         (view.getUint8(offset + 2) << 8) |
-        view.getUint8(offset + 3);
+        view.getUint8(offset + 3)) >>> 0;
       parsedData.red[channel].push({
         status,
         value
@@ -100,14 +104,14 @@ function parsePPGData(bufferArray) {
     }
   }
 
-  // 红外光数据：从偏移91开始（11+80），共80字节
+  // 解析红外光数据
   for (let channel = 0; channel < 4; channel++) {
     for (let sample = 0; sample < 5; sample++) {
       const offset = 91 + (channel * 5 + sample) * 4;
       const status = view.getUint8(offset);
-      const value = (view.getUint8(offset + 1) << 16) |
+      const value = ((view.getUint8(offset + 1) << 16) |
         (view.getUint8(offset + 2) << 8) |
-        view.getUint8(offset + 3);
+        view.getUint8(offset + 3)) >>> 0;
       parsedData.infrared[channel].push({
         status,
         value
@@ -115,14 +119,54 @@ function parsePPGData(bufferArray) {
     }
   }
 
-  // --------------- 解析加速度数据 ---------------
-  const accelOffset = 171; // 177-6=171
-  parsedData.acc.x = view.getInt16(accelOffset, false) * 32 / 32768; // x轴
-  parsedData.acc.y = view.getInt16(accelOffset + 2, false) * 32 / 32768; // y轴
-  parsedData.acc.z = view.getInt16(accelOffset + 4, false) * 32 / 32768; // z轴
+  // 解析加速度数据 ✅ 放在这里
+  const accelOffset = 171;
+  parsedData.acc.x = view.getInt16(accelOffset, false) * 32 / 32768;
+  parsedData.acc.y = view.getInt16(accelOffset + 2, false) * 32 / 32768;
+  parsedData.acc.z = view.getInt16(accelOffset + 4, false) * 32 / 32768;
+
+  // 计算运动幅度 如果太大就不计算SpO2
+  // const movementMagnitude = Math.sqrt(parsedData.acc.x ** 2 + parsedData.acc.y ** 2 + parsedData.acc.z ** 2);
+  // console.log(movementMagnitude);
+  // // 阈值判断（假设阈值为 0.5 m/s²）
+  // const MAX_MOVEMENT_FOR_SPO2 = 3;
+  // if (movementMagnitude > MAX_MOVEMENT_FOR_SPO2) {
+  //   console.log("运动幅度过大，跳过 SpO2 计算");
+  // } else {
+  //   console.log("运动幅度正常，继续计算 SpO2");
+  // }
+
+  // const redSamples = extractValidSamples(parsedData.red);
+  // const irSamples = extractValidSamples(parsedData.infrared);
+  // const filteredRed = movingAverage(redSamples);
+  // const filteredIR = movingAverage(irSamples);
+  // const {
+  //   ac: acRed,
+  //   dc: dcRed
+  // } = calculateACDC(filteredRed);
+  // const {
+  //   ac: acIR,
+  //   dc: dcIR
+  // } = calculateACDC(filteredIR);
+
+  // // 计算AC/DC比值（取峰峰值）
+  // const ratioRed = (Math.max(...acRed) - Math.min(...acRed)) / dcRed[0];
+  // const ratioIR = (Math.max(...acIR) - Math.min(...acIR)) / dcIR[0];
+
+  // // 示例校准参数（需根据设备特性调整！）
+  // const CALIB_A = 110;
+  // const CALIB_B = 25;
+
+  // function calculateSpO2(ratioRed, ratioIR) {
+  //   const R = ratioRed / ratioIR;
+  //   return CALIB_A - CALIB_B * R; // 简化线性模型
+  // }
+  // const spo2 = calculateSpO2(ratioRed, ratioIR);
+  // console.log('血氧', spo2);
 
   return parsedData;
 }
+
 
 function parseGSRData(bufferArray) {
   const view = new DataView(new Uint8Array(bufferArray).buffer);
@@ -143,4 +187,28 @@ function parseGSRData(bufferArray) {
     }
   }
   return parsedData;
+}
+// 提取所有有效采样点（假设 status=0 为有效数据）
+function extractValidSamples(ppgArray) {
+  return ppgArray.flatMap(channel =>
+    channel.filter(sample => sample.status === 0)
+    .map(sample => sample.value)
+  );
+}
+// 移动平均滤波（简化版）
+function movingAverage(data, windowSize = 5) {
+  return data.map((_, i) => {
+    const start = Math.max(0, i - windowSize);
+    const subset = data.slice(start, i + 1);
+    return subset.reduce((a, b) => a + b, 0) / subset.length;
+  });
+}
+// 分离AC和DC分量
+function calculateACDC(signal) {
+  const dc = movingAverage(signal, 25); // 用较长窗口计算DC（模拟低通滤波）
+  const ac = signal.map((val, i) => val - dc[i]);
+  return {
+    ac,
+    dc
+  };
 }

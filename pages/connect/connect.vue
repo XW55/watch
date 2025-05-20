@@ -2,6 +2,8 @@
   <view class="container">
     <!-- 控制按钮 -->
     <button @click="initAndStartScan">初始化并开始搜索</button>
+
+    <button @click="downloadPPGDataAsTxt">下载PPG数据</button>
     <button v-if="isScanning" @click="stopScan">停止搜索</button>
     <!-- <button @click="print">打印日志</button> -->
 
@@ -10,7 +12,7 @@
     <text v-if="devices.length === 0 && isScanning">正在搜索中...</text>
 
     <block v-for="device in devices" :key="device.deviceId">
-      <view class="device-item" @click="connectToDevice(device.deviceId)">
+      <view class="device-item" @click="connectToDevice(device)">
         <text>{{ device.name || '未知设备' }} - {{ device.deviceId }}</text>
       </view>
     </block>
@@ -39,17 +41,24 @@ import {
   getDiscoveredDevices,
   connectToDevice
 } from '@/utils/bluetooth';
-import { processIncomingData, setOnDataParsed } from '@/utils/config.js'; // 注意路径可能需要调整
+import { processIncomingData, setOnDataParsed, ppgValuesHistory, gsrValuesHistory } from '@/utils/config.js'; // 注意路径可能需要调整
 import { baseOption, xyzOption } from '@/utils/echartsOption.js';
+import { updateEdaData } from '@/api/algorithm.js';
+import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
+let gsrUpload = [];
 export default {
   data() {
     return {
+      ppgValuesHistory,
+      gsrValuesHistory,
+      isLog: true,
       xyzOption,
       tempGsrData: [], // 临时存储
       isUpdating: false, // 标识是否正在更新
       baseOption,
       isScanning: false,
       devices: [],
+      deviceSn: '',
       status: '',
       bleData: null, // 存储解析后的数据
       chartData: {
@@ -63,8 +72,10 @@ export default {
       redData: {
         categories: [],
         series: [
-          { name: '红光', data: [] },
-          { name: '红外光', data: [] }
+          { name: '1通道', data: [] },
+          { name: '2通道', data: [] },
+          { name: '3通道', data: [] },
+          { name: '4通道', data: [] }
         ]
       },
       gsrData: {
@@ -91,7 +102,7 @@ export default {
           data: [
             {
               min: 0,
-              max: 2
+              max: 5
             }
           ]
         },
@@ -110,18 +121,62 @@ export default {
   },
   mounted() {
     this.updateDeviceList();
-
     // 注册回调，接收解析后的数据
     setOnDataParsed((type, data) => {
-      if (type.toUpperCase() == 'GSR') {
+      if (type.toUpperCase() == 'GSR' && this.isLog) {
         console.log('皮电', data);
+        gsrUpload.push(...data.gsr);
+        console.log('长度', gsrUpload.length);
+        if (gsrUpload.length % 100 == 0) {
+          this.uploadGsrData();
+        }
+      } else {
+        // console.log('红外', data);
       }
       // console.log(`收到 ${type.toUpperCase()} 数据`, data);
-      this.bleData = data;
-      this.updateChartData(data);
+      // this.bleData = data;
+      // this.updateChartData(data);
     });
   },
   methods: {
+    uploadGsrData() {
+      const dataToUpload = gsrUpload.slice(-100); // 取出最后100条数据
+
+      console.log('10s上传皮电', dataToUpload);
+      const obj = {
+        pId: GUID(),
+        eda: dataToUpload,
+        patientName: '姓名',
+        gender: '男',
+        age: 20,
+        patientPhone: '15360544778',
+        patientCode: '411325200310186547',
+        deviceSn: this.deviceSn,
+        hospName: '医院名称',
+        samplingRate: 10,
+        recordDate: getCurrentTimeFormatted()
+      };
+      console.log('上传的数据', obj);
+      console.log('此时长度', gsrUpload.length);
+
+      // 调用上传函数
+      updateEdaData(obj)
+        .then((res) => {
+          console.log(res);
+          // 成功上传后，删除已上传的数据
+          gsrUpload = gsrUpload.slice(100); // 删除前100个已上传的数据
+        })
+        .catch((err) => {
+          console.error('上传失败:', err);
+          // 失败时不清空缓存，下次重试
+        });
+    },
+    downloadPPGDataAsTxt() {
+      this.isLog = false;
+      console.log('打印数据');
+      console.log(ppgValuesHistory);
+      console.log(gsrValuesHistory);
+    },
     async initAndStartScan() {
       this.devices = [];
       try {
@@ -150,13 +205,14 @@ export default {
       }, 500);
     },
 
-    async connectToDevice(deviceId) {
-      this.status = `正在连接 ${deviceId}...`;
+    async connectToDevice(device) {
+      this.deviceSn = device.deviceId;
+      this.status = `正在连接 ${device.deviceId}...`;
       try {
-        await connectToDevice(deviceId, (data) => {
+        await connectToDevice(device.deviceId, (data) => {
           processIncomingData(data); // 处理接收到的数据
         });
-        this.status = `连接成功：${deviceId}`;
+        this.status = `连接成功：${device.deviceId}`;
       } catch (err) {
         this.status = `连接失败：${err.errMsg}`;
       }
@@ -172,24 +228,40 @@ export default {
         this.chartData.series[0].data.push(data.acc.x); // X轴
         this.chartData.series[1].data.push(data.acc.y); // Y轴
         this.chartData.series[2].data.push(data.acc.z); // Z轴
-        if (this.chartData.categories.length > 10) {
+        if (this.chartData.categories.length > 50) {
           this.chartData.categories.shift();
           this.chartData.series.forEach((s) => s.data.shift());
         }
       }
 
       if (data.red && data.infrared) {
-        const redValues = data.red.flat().map((item) => item.value);
-        const infraredValues = data.infrared.flat().map((item) => item.value);
-        const avgRed = redValues.reduce((a, b) => a + b, 0) / redValues.length;
-        const avgIr = infraredValues.reduce((a, b) => a + b, 0) / infraredValues.length;
+        // 确保accIndex递增以反映新的时间点
+        this.redData.categories.push(this.accIndex++);
 
-        this.redData.categories.push(this.accIndex);
-        this.redData.series[0].data.push(avgRed);
-        this.redData.series[1].data.push(avgIr);
-        if (this.redData.categories.length > 10) {
-          this.redData.categories.shift();
-          this.redData.series.forEach((s) => s.data.shift());
+        for (let i = 0; i < Math.min(data.red.length, data.infrared.length); i++) {
+          const redValues = data.red[i].map((item) => item.value);
+          const irValues = data.infrared[i].map((item) => item.value);
+
+          // 假设redValues和irValues长度相同
+          for (let j = 0; j < Math.max(redValues.length, irValues.length); j++) {
+            if (j < redValues.length) {
+              this.redData.series[i * 2].data.push(redValues[j]);
+            }
+            if (j < irValues.length) {
+              this.redData.series[i * 2 + 1].data.push(irValues[j]);
+            }
+          }
+
+          // 如果超出最大长度则移除最旧的数据
+          if (this.redData.series[i * 2].data.length > 10) {
+            this.redData.series[i * 2].data.shift();
+          }
+          if (this.redData.series[i * 2 + 1].data.length > 10) {
+            this.redData.series[i * 2 + 1].data.shift();
+          }
+          if (this.redData.categories.length > 50) {
+            this.redData.categories.shift();
+          }
         }
       }
 
@@ -222,24 +294,9 @@ export default {
           this.gsrData.categories.shift();
           this.gsrData.series[0].data.shift();
         }
-        if (this.gsrIndex >= 10) {
+        if (this.gsrIndex >= 50) {
           this.gsrIndex = 1;
         }
-
-        // // 动态调整 Y 轴范围（可选）
-        // const values = this.gsrData.series[0].data;
-        // if (values.length > 0) {
-        //   const maxVal = Math.max(...values);
-        //   const minVal = Math.min(...values);
-        //   const padding = (maxVal - minVal) * 0.1;
-
-        //   this.gsrOption.yAxis.min = minVal - padding;
-        //   this.gsrOption.yAxis.max = maxVal + padding;
-        // }
-
-        // 强制响应式更新
-        // this.$set(this, 'gsrData', { ...this.gsrData });
-        // this.$set(this, 'gsrOption', { ...this.gsrOption });
 
         // 设置下一个定时器
         setTimeout(() => this.updateChartWithDelay(), 100); // 每隔0.1秒更新一次

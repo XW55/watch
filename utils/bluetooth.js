@@ -103,7 +103,7 @@ uni.onBLEConnectionStateChange(res => {
     console.log("设备已连接，准备获取服务...");
     setTimeout(() => {
       handleBLEDeviceServices(res.deviceId); // 把 deviceId 传递给实际处理函数 
-    }, 1500)
+    }, 2000)
 
   } else {
     console.warn("设备断开连接", res.deviceId);
@@ -129,12 +129,22 @@ function handleBLEDeviceServices(deviceId) {
 
       if (!servicesRes.services || servicesRes.services.length === 0) {
         console.error("服务列表为空");
+        uni.closeBluetoothAdapter({
+          success(res) {
+
+          }
+        })
         return;
       }
 
       const foundService = servicesRes.services.find(s => s.uuid.toLowerCase() === serviceId.toLowerCase());
       if (!foundService) {
         console.error("未找到指定服务 UUID");
+        uni.closeBluetoothAdapter({
+          success(res) {
+
+          }
+        })
         return;
       }
 
@@ -146,6 +156,11 @@ function handleBLEDeviceServices(deviceId) {
             .toLowerCase());
           if (!foundChar) {
             console.error("未找到指定特征值 UUID");
+            uni.closeBluetoothAdapter({
+              success(res) {
+
+              }
+            })
             return;
           }
 
@@ -189,6 +204,7 @@ function handleBLEDeviceServices(deviceId) {
  * @param {string} deviceId - 蓝牙设备ID
  */
 export function connectToDevice(deviceId, callBack) {
+  console.log('连接的id', deviceId);
   getDataCallBack = callBack
   return new Promise((resolve, reject) => {
     uni.createBLEConnection({

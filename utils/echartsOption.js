@@ -16,10 +16,7 @@ export const baseOption = {
     dashLength: 2,
     data: [],
     splitNumber: 4,
-    data: [{
-      min: -5,
-      max: 5
-    }],
+
     format: (val) => val.toFixed(3) // 关键：格式化显示)
   },
   extra: {
