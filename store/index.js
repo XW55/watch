@@ -30,6 +30,7 @@ export default new Vuex.Store({
       sex: '',
       height: 170,
       weight: 120,
+      age: 18,
     },
 
     startCountingTime: null,
@@ -73,6 +74,7 @@ export default new Vuex.Store({
         hospName: user.hospName,
         height: user.height,
         weight: user.weight,
+        age: user.age,
       };
       console.log('vuex修改', state.barUser);
       uni.setStorageSync('user', user);

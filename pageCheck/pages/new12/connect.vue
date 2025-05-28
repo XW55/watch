@@ -406,7 +406,7 @@ export default {
       console.log(data[1].length);
       const newDataObj = {
         patientName: this.barUser.name,
-        age: 18,
+        age: this.barUser.age || 18,
         gender: this.barUser.sex == '男' ? true : false,
         data,
         sampleRate: 250,

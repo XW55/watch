@@ -205,6 +205,7 @@ export default {
       }
     },
     getpersonalInformation(tel) {
+      let th = this;
       getUserInfo(tel)
         .then((res) => {
           if (res.data.code == 200) {
@@ -215,7 +216,8 @@ export default {
               sex: res.data.data.gender,
               hospName: res.data.data.hospital || '郑大',
               height: res.data.data.height,
-              weight: res.data.data.weight
+              weight: res.data.data.weight,
+              age: th.calculateAgeRealTime(res.data.data.birthDay)
             };
             this.setBarUser(user);
           }
@@ -223,6 +225,20 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+    },
+    calculateAgeRealTime(birthDateString) {
+      const birthDate = new Date(birthDateString);
+      const today = new Date(); // 使用当前系统时间
+
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+
+      if (today < birthdayThisYear) {
+        age--;
+      }
+
+      return age;
     }
   }
 };
