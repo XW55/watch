@@ -25,7 +25,7 @@ export const phoneLoginByHeJia = (data) => {
 // app 端手机号登录
 export const phoneLogin = (data) => {
   return request({
-    url: `/sms/login`,
+    url: `/appLoginSkip`,
     method: "POST",
     data
   }, {

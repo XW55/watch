@@ -158,6 +158,7 @@ export default {
         });
     },
     login() {
+      let th = this;
       if (this.validate('userPhone') && this.validate('userPwdPhone')) {
         if (this.ty == 0) {
           uni.showToast({
@@ -172,6 +173,7 @@ export default {
           uuid: this.uuid
         })
           .then((res) => {
+            console.log(res);
             if (res.data.code == 200) {
               uni.showToast({
                 title: '登录成功',
@@ -180,18 +182,20 @@ export default {
               var token = res.data.token;
               uni.setStorageSync('token', token);
               uni.setStorageSync('tel', this.userPhone);
-              uni.setStorageSync('username', this.userPhone);
-              if (res.data.isDoctor) {
-                uni.setStorageSync('isDoctor', res.data.isDoctor);
-                this.setIsDoctor(res.data.isDoctor);
-              }
+
               if (res.data.BindingState) {
+                th.getpersonalInformation(uni.getStorageSync('tel'));
                 setTimeout(() => {
                   uni.switchTab({
                     url: '/pages/index/index'
                   });
                 }, 2000);
               } else {
+                setTimeout(() => {
+                  uni.redirectTo({
+                    url: '/loginSign/pages/information/information'
+                  });
+                }, 2000);
               }
             }
           })
@@ -199,6 +203,26 @@ export default {
             console.log(err);
           });
       }
+    },
+    getpersonalInformation(tel) {
+      getUserInfo(tel)
+        .then((res) => {
+          if (res.data.code == 200) {
+            console.log('患者info: ', res.data.data);
+            let user = {
+              name: res.data.data.userName,
+              tel: res.data.data.patientPhone,
+              sex: res.data.data.gender,
+              hospName: res.data.data.hospital || '郑大',
+              height: res.data.data.height,
+              weight: res.data.data.weight
+            };
+            this.setBarUser(user);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   }
 };

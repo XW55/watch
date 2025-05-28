@@ -43,20 +43,3 @@ export const getDayString = (day) => {
   day1 = day1 > 9 ? day1 : "0" + day1;
   return `${year}-${month}-${day1}`;
 }
-
-import pg0 from '@/static/images/uninterpreted.png';
-import pg1 from '@/static/images/Interpreted.png';
-import pg2 from '@/static/images/reading.png';
-import pg3 from '@/static/images/back.png';
-// 解读图片
-export const getImg = (val) => {
-  if (val == 0) {
-    return pg0;
-  } else if (val == 1) {
-    return pg1;
-  } else if (val == 2) {
-    return pg2;
-  } else if (val == 3) {
-    return pg3;
-  }
-}
