@@ -20,12 +20,67 @@
       "style": {
         "navigationBarTitleText": "连接"
       }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
     }
   ],
+  "subPackages": [{
+    "root": "loginSign",
+    "pages": [{
+        "path": "pages/login/login",
+        "style": {
+          "navigationBarTitleText": "",
+          "enablePullDownRefresh": false,
+          "navigationStyle": "custom"
+        }
+      },
+      {
+        "path": "pages/privacyServices/privacyServices",
+        "style": {
+          "navigationBarTitleText": ""
+        }
+      },
+      {
+        "path": "pages/information/information",
+        "style": {
+          "navigationBarTitleText": "",
+          "navigationStyle": "custom"
+        }
+      }, {
+        "path": "pages/modify/modify",
+        "style": {
+          "navigationBarTitleText": "修改信息",
+          "enablePullDownRefresh": false
+        }
+      }
+    ]
+  }, {
+    "root": "pageCheck",
+    "pages": [{
+        "path": "pages/new12/connect",
+        "style": {
+          "navigationBarTitleText": "",
+          "enablePullDownRefresh": false,
+          "navigationStyle": "custom"
+        }
+      },
+      {
+        "path": "pages/search/search",
+        "style": {
+          "navigationBarTitleText": "搜索",
+          "enablePullDownRefresh": false
+        }
+      }
+    ]
+  }],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8",
+    "navigationBarBackgroundColor": "#fff",
+    "backgroundColor": "#fff",
     "navigationStyle": "default" // 或者 "custom" 如果使用自定义导航栏
   },
   "tabBar": {
@@ -45,6 +100,12 @@
       }, {
         "pagePath": "pages/connect/connect",
         "text": "连接",
+        "iconPath": "static/tabs/demo.png",
+        "selectedIconPath": "static/tabs/demo_active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
         "iconPath": "static/tabs/demo.png",
         "selectedIconPath": "static/tabs/demo_active.png"
       }

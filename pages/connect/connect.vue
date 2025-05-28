@@ -135,7 +135,7 @@ export default {
       }
       // console.log(`收到 ${type.toUpperCase()} 数据`, data);
       // this.bleData = data;
-      // this.updateChartData(data);
+      this.updateChartData(data);
     });
   },
   methods: {

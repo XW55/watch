@@ -16,7 +16,7 @@
         justify-content: center;
       "
     >
-      12导检测
+      修改个人信息
     </view>
   </view>
 </template>
@@ -26,7 +26,6 @@ export default {
   data() {
     return {};
   },
-  mounted() {},
   methods: {
     tiaozhuan() {
       if (!uni.getStorageSync('token')) {
@@ -34,20 +33,12 @@ export default {
           url: '/loginSign/pages/login/login'
         });
       }
-      console.log('首页中本地中得ble设备');
-      console.log(uni.getStorageSync('ble'));
-      if (uni.getStorageSync('ble')) {
-        uni.navigateTo({
-          url: '/pageCheck/pages/new12/connect'
-        });
-      } else {
-        uni.navigateTo({
-          url: '/pageCheck/pages/search/search'
-        });
-      }
+      uni.redirectTo({
+        url: '/loginSign/pages/modify/modify'
+      });
     }
   }
 };
 </script>
 
-<style scoped></style>
+<style lang="scss"></style>

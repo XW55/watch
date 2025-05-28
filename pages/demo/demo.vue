@@ -1,25 +1,41 @@
 <template>
   <view>
-    {{ data }}
+    <view
+      class=""
+      @click="tiaozhuan"
+      style="
+        width: 95%;
+        margin: 0 auto;
+        border-radius: 15rpx;
+        background-color: #ff6c00;
+        padding: 15rpx;
+        color: #fff;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      退出登录
+    </view>
   </view>
 </template>
 
 <script>
-// import * as tool from '@/utils/config.js';
 export default {
   data() {
-    return {
-      data: {}
-    };
+    return {};
   },
-  onLoad() {
-    // 示例数据
-    const hexString =
-      '00AA00CC200000333100010080D6330884E2741083253F18812C3E2080F592288627DA3084EBD1388154792080F592288627DA3084EBD138815479FF' +
-      'F7FFCA080C';
-    // this.data = tool.parseSensorData(hexString);
-    console.log('解析结果：', data);
-  },
-  methods: {}
+  onLoad() {},
+  methods: {
+    tiaozhuan() {
+      uni.closeBluetoothAdapter({
+        success(res) {
+          console.log(`关闭蓝牙适配${res}`);
+        }
+      });
+      uni.clearStorageSync();
+    }
+  }
 };
 </script>
