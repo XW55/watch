@@ -115,7 +115,7 @@
 
 <script>
 import { setOnDataParsed, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/new12ble';
-import { mapState, mapMutations } from 'vuex';
+import { mapState } from 'vuex';
 import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
 import { DrawEcg, DrawHreat } from '../../components/xindraw12.js';
 import { xindraw, clear, updateAndDrawEcg } from '../../components/xindraw12Re.js';
@@ -336,7 +336,7 @@ export default {
     clearInterval(this.timer);
   },
   methods: {
-    ...mapMutations({}),
+    // ...mapMutations({}),
 
     /**
      右上角返回图标
@@ -405,28 +405,17 @@ export default {
       console.log('触发上传数据');
       console.log(data[1].length);
       const newDataObj = {
-        // patientName: this.barUser.name || uni.getStorageSync('userName'),
-        // age: 18,
-        // gender: this.barUser.sex == '男' ? true : false,
-        // data,
-        // sampleRate: 250,
-        // id: this.guid,
-        // ecgType: 'DECG12ZKY',
-        // recordDate: new Date(),
-        // deviceSn: this.bleDevs[0]?.deviceId || 'ZKMC ECG 12',
-        // patient_phone: this.barUser.tel || uni.getStorageSync('tel'),
-        // hospName: '测试医院'
-        patientName: '黄文涛',
-        age: 18,
-        gender: true,
+        patientName: this.barUser.name,
+        age: this.barUser.age || 18,
+        gender: this.barUser.sex == '男' ? true : false,
         data,
         sampleRate: 250,
         id: this.guid,
         ecgType: 'DECG12ZKY',
         recordDate: new Date(),
-        deviceSn: 'ZKMC ECG 12',
-        patient_phone: '17839753707',
-        hospName: '测试医院'
+        deviceSn: this.ble?.deviceId || 'ZKMC ECG 12',
+        patient_phone: this.barUser.tel || uni.getStorageSync('tel'),
+        hospName: this.barUser.hospName
       };
       console.log('12导', newDataObj);
       return uni

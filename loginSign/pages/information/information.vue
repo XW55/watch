@@ -1,6 +1,6 @@
 <template>
   <view class="page">
-    <u-navbar title="注册" bgColor="#c8ffeb" :placeholder="true"></u-navbar>
+    <u-navbar title="注册" bgColor="#fff" :placeholder="true"></u-navbar>
     <view class="" v-if="diyici">
       <view class="xinkuang shangxia">
         <view class="hi">Hi ~</view>
@@ -32,9 +32,9 @@
               @cancel="riqiquxiao"
               style="flex: 1"
             >
-              <view class="flex" style="justify-content: flex-end">
+              <view class="flex" style="display: flex; justify-content: flex-end; align-items: center">
                 <view class="uni-input">{{ date }}</view>
-                <u-icon name="arrow-right" size="16" style="margin-top: 10rpx" color="#000"></u-icon>
+                <u-icon name="arrow-right" size="16" color="#000"></u-icon>
               </view>
             </picker>
           </view>
@@ -73,18 +73,18 @@
           <view class="list-item" style="width: 95%; margin: 0 auto">
             <text class="font">身高</text>
             <picker mode="selector" @change="bindMultiPickerColumnChange" :value="multiIndex" :range="array">
-              <view class="flex" style="justify-content: flex-end">
+              <view class="flex" style="display: flex; justify-content: flex-end; align-items: center">
                 <view class="uni-input">{{ num }}cm</view>
-                <u-icon name="arrow-right" size="16" style="margin-top: 10rpx" color="#000"></u-icon>
+                <u-icon name="arrow-right" size="16" color="#000"></u-icon>
               </view>
             </picker>
           </view>
           <view class="list-item" style="width: 95%; margin: 0 auto">
             <text class="font">体重</text>
             <picker mode="selector" @change="bindMultiPickerColumnChange1" :value="multiIndex1" :range="array1">
-              <view class="flex" style="justify-content: flex-end">
+              <view class="flex" style="display: flex; justify-content: flex-end; align-items: center">
                 <view class="uni-input">{{ num1 }}kg</view>
-                <u-icon name="arrow-right" size="16" style="margin-top: 10rpx" color="#000"></u-icon>
+                <u-icon name="arrow-right" size="16" color="#000"></u-icon>
               </view>
             </picker>
           </view>
@@ -100,11 +100,9 @@
           <view class="isolation"></view>
           <button
             class="select-item"
-            @tap="goSeHp"
             style="width: 95%; margin: 0 auto; border-radius: 0 0 25rpx 25rpx; padding: 0 20rpx"
           >
             <view>{{ selectHospital || '请选择医院' }}</view>
-            <uni-icons type="right" size="36rpx"></uni-icons>
           </button>
         </view>
         <view class="shurukuangzuti" style="padding: 20rpx 10rpx; background-color: #00d4d0">
@@ -170,7 +168,8 @@
 
 <script>
 // import { throttleNavigate } from '@/wlsdk/showModule.js';
-import { addMedicalHistory, getDisease, register } from '@/api/loginSign/index.js';
+import { getUserInfo, addMedicalHistory, getDisease, register } from '@/api/loginSign/index.js';
+import { mapMutations } from 'vuex';
 export default {
   data() {
     const defaultDate = this.getDate('jian');
@@ -260,17 +259,8 @@ export default {
     // this.array1.push('120kg以上')
     this.getlist();
   },
-  onShow() {
-    if (uni.getStorageSync('selectHospital')) {
-      this.selectHospital = uni.getStorageSync('selectHospital');
-    }
-    if (uni.getStorageSync('hospName')) {
-      this.selectHospital = uni.getStorageSync('hospName');
-    }
-  },
-  onUnload() {
-    uni.removeStorageSync('selectHospital');
-  },
+  onShow() {},
+  onUnload() {},
   computed: {
     startDate() {
       let start = this.getDate('start');
@@ -304,6 +294,9 @@ export default {
     }
   },
   methods: {
+    ...mapMutations({
+      setBarUser: 'SET_BAR_USER'
+    }),
     riqiquxiao() {
       console.log('点击了遮罩层或取消');
       this.date = '请选择';
@@ -510,6 +503,7 @@ export default {
     },
 
     getform1(tiem) {
+      uni.hideLoading();
       register({
         userName: this.tel,
         patientPhone: this.tel,
@@ -542,6 +536,7 @@ export default {
       // throttleNavigate(url);
     },
     getform2(tiem) {
+      let th = this;
       addMedicalHistory({
         height: parseFloat(this.num),
         weight: parseFloat(this.num1),
@@ -551,8 +546,8 @@ export default {
       })
         .then((res) => {
           if (uni.getStorageSync('token')) {
-            uni.setStorageSync('hospName', this.selectHospital);
             if (tiem) {
+              th.getpersonalInformation();
               setTimeout(() => {
                 uni.hideLoading();
                 uni.showToast({
@@ -581,7 +576,42 @@ export default {
           console.log(err);
         });
     },
+    getpersonalInformation() {
+      let th = this;
+      getUserInfo(uni.getStorageSync('tel'))
+        .then((res) => {
+          if (res.data.code == 200) {
+            console.log('患者info: ', res.data.data);
+            let user = {
+              name: res.data.data.userName,
+              tel: res.data.data.patientPhone,
+              sex: res.data.data.gender,
+              hospName: res.data.data.hospital || '郑大',
+              height: res.data.data.height,
+              weight: res.data.data.weight,
+              age: th.calculateAgeRealTime(res.data.data.birthDay)
+            };
+            th.setBarUser(user);
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    calculateAgeRealTime(birthDateString) {
+      const birthDate = new Date(birthDateString);
+      const today = new Date(); // 使用当前系统时间
 
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+
+      if (today < birthdayThisYear) {
+        age--;
+      }
+
+      return age;
+    },
     getDate(type) {
       const date = new Date();
       let year = date.getFullYear();

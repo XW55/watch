@@ -27,7 +27,10 @@ export default new Vuex.Store({
       name: '',
       tel: '',
       hospName: '',
-      sex: ''
+      sex: '',
+      height: 170,
+      weight: 120,
+      age: 18,
     },
 
     startCountingTime: null,
@@ -45,8 +48,9 @@ export default new Vuex.Store({
   },
   // 相当于methods
   mutations: {
-    SET_IS_DOCTOR: (state, isDoctor) => {
+    SET_IS_DOCTOR: (state, isDoctor = false) => {
       state.isDoctor = isDoctor;
+      uni.setStorageSync('isDoctor', isDoctor);
     },
     SET_BLE: (state, ble = '') => {
       state.ble = ble;
@@ -66,10 +70,14 @@ export default new Vuex.Store({
       state.barUser = {
         name: user.name,
         tel: user.tel,
-        sex: user.sex
-        // hospName: user.hospName || '郑大',
+        sex: user.sex,
+        hospName: user.hospName,
+        height: user.height,
+        weight: user.weight,
+        age: user.age,
       };
       console.log('vuex修改', state.barUser);
+      uni.setStorageSync('user', user);
     },
 
 
