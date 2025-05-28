@@ -9,7 +9,8 @@ export const baseOption = {
   enableScroll: false,
   legend: {},
   xAxis: {
-    disableGrid: true
+    disableGrid: true,
+    disabled: true,
   },
   yAxis: {
     gridType: 'dash',
@@ -40,7 +41,8 @@ export const xyzOption = {
   enableScroll: false,
   legend: {},
   xAxis: {
-    disableGrid: true
+    disableGrid: true,
+    disabled: true,
   },
   yAxis: {
     gridType: 'dash',
