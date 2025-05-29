@@ -37,7 +37,7 @@ export default {
     return {
       bleDevs: [],
       yijingbleDevs: []
-    }
+    };
   },
   computed: {},
   onLoad(options) {},
@@ -46,116 +46,116 @@ export default {
 
   //离开当前页面
   onUnload() {
-    console.log('离开了')
+    console.log('离开了');
     for (let i = 0; i < yijingbleDevs.length; i++) {
-      this.close(yijingbleDevs[i])
+      this.close(yijingbleDevs[i]);
     }
     uni.closeBluetoothAdapter({
       success(res) {
-        console.log(`关闭蓝牙适配${res}`)
+        console.log(`关闭蓝牙适配${res}`);
       }
-    })
+    });
   },
 
   // 画图
   methods: {
     quxiaosousuo() {
-      this.stopBluetoothDevicesDiscovery()
+      this.stopBluetoothDevicesDiscovery();
     },
     formatString(str) {
-      let result = []
+      let result = [];
       for (let i = 0; i < str.length; i += 2) {
-        let pair = str.substring(i, i + 2)
-        result.push('0x' + pair)
+        let pair = str.substring(i, i + 2);
+        result.push('0x' + pair);
       }
-      return result.join(' ')
+      return result.join(' ');
     },
     ab2hex(buffer) {
       const hexArr = Array.prototype.map.call(new Uint8Array(buffer), function (bit) {
-        return ('00' + bit.toString(16)).slice(-2)
-      })
-      return hexArr.join('')
+        return ('00' + bit.toString(16)).slice(-2);
+      });
+      return hexArr.join('');
     },
     // 初始化蓝牙适配器并搜索设备
     searchBluetooth() {
-      const that = this
+      const that = this;
       uni.openBluetoothAdapter({
-        success: res => {
+        success: (res) => {
           //已打开
           uni.getBluetoothAdapterState({
             //蓝牙的匹配状态
-            success: res1 => {
+            success: (res1) => {
               // console.log(res1, "“本机设备的蓝牙已打开”");
               // 开始搜索蓝牙设备
-              that.startBluetoothDiscovery()
+              that.startBluetoothDiscovery();
             },
             fail(error) {
-              uni.showToast({ icon: 'none', title: '查看手机蓝牙是否打开' })
+              uni.showToast({ icon: 'none', title: '查看手机蓝牙是否打开' });
             }
-          })
+          });
         },
-        fail: err => {
+        fail: (err) => {
           //未打开
-          uni.showToast({ icon: 'none', title: '查看手机蓝牙是否打开' })
+          uni.showToast({ icon: 'none', title: '查看手机蓝牙是否打开' });
         }
-      })
+      });
     },
 
     // 开始蓝牙设备搜索
     startBluetoothDiscovery() {
-      const that = this
+      const that = this;
       uni.startBluetoothDevicesDiscovery({
-        success: res => {
+        success: (res) => {
           // console.log("启动成功", res);
           // 发现外围设备
-          that.onBluetoothDeviceFound()
+          that.onBluetoothDeviceFound();
         },
-        fail: err => {
+        fail: (err) => {
           // console.log(err, "错误信息");
         }
-      })
+      });
     },
     // 发现外围设备
     onBluetoothDeviceFound() {
-      console.log('执行到这--发现外围设备')
-      uni.onBluetoothDeviceFound(res => {
+      console.log('执行到这--发现外围设备');
+      uni.onBluetoothDeviceFound((res) => {
         if (res.devices[0].name == 'ZKMC ECG 12' || res.devices[0].name.startsWith('MP')) {
-          console.log(res)
+          console.log(res);
         }
         // 吧搜索到的设备存储起来，方便我们在页面上展示
         if (this.bleDevs.indexOf(res.devices[0]) == -1) {
           if (res.devices[0].name == 'ZKMC ECG 12' || res.devices[0].name.startsWith('MP')) {
-            this.bleDevs.push(res.devices[0])
+            this.bleDevs.push(res.devices[0]);
           }
         }
-      })
+      });
     },
 
     // 停止搜寻蓝牙设备
     stopBluetoothDevicesDiscovery() {
       uni.stopBluetoothDevicesDiscovery({
-        success: e => {},
-        fail: e => {
-          console.log('停止搜索蓝牙设备失败，错误码：' + e.errCode)
+        success: (e) => {},
+        fail: (e) => {
+          console.log('停止搜索蓝牙设备失败，错误码：' + e.errCode);
         }
-      })
+      });
     },
     // 直接启用监听功能
     nowLinkLis(items) {
-      console.log('----------')
-      console.log(items)
-      let that = this
-      let zhi = false
-      let data = ''
+      console.log('----------');
+      console.log(items);
+      let that = this;
+      let zhi = false;
+      let data = '';
       uni.showLoading({
         title: '连接中，请稍等',
         mask: true
-      })
+      });
       //连接蓝牙
       uni.createBLEConnection({
         deviceId: items.deviceId,
         success(res) {
-          that.stopBluetoothDevicesDiscovery() // 停止搜索蓝牙
+          that.stopBluetoothDevicesDiscovery(); // 停止搜索蓝牙
           if (items.name.startsWith('ZKMC')) {
             setTimeout(() => {
               uni.notifyBLECharacteristicValueChange({
@@ -163,60 +163,62 @@ export default {
                 deviceId: items.deviceId,
                 serviceId: '6E400003-B5A3-F393-E0A9-E50E24DCCA9E',
                 characteristicId: '6E400003-B5A3-F393-E0A9-E50E24DCCA9E',
-                success: res => {
-                  console.log('启用监听了', res)
-                  that.yijingbleDevs.push(items)
-                  that.bleDevs = that.bleDevs.filter(dev => dev.name !== items.name)
+                success: (res) => {
+                  console.log('启用监听了', res);
+                  that.yijingbleDevs.push(items);
+                  that.bleDevs = that.bleDevs.filter((dev) => dev.name !== items.name);
                   uni.showToast({
                     title: '连接成功',
                     icon: 'success'
-                  })
-                  uni.hideLoading()
-                  uni.onBLECharacteristicValueChange(res => {
+                  });
+                  uni.hideLoading();
+                  uni.onBLECharacteristicValueChange((res) => {
                     if (zhi) {
-                      data = data + ' ' + that.formatString(that.ab2hex(res.value))
-                      let hexArray = data.split(' ')
-                      console.log(hexArray)
-                      console.log(hexArray.length)
-                      let jiexi = hexArray.slice(11, 251)
+                      console.log('心电贴');
+                      console.log(res);
+                      data = data + ' ' + that.formatString(that.ab2hex(res.value));
+                      let hexArray = data.split(' ');
+                      // console.log(hexArray)
+                      // console.log(hexArray.length)
+                      let jiexi = hexArray.slice(11, 251);
                       // console.log(jiexi);
-                      let results = []
+                      let results = [];
                       for (let i = 0; i < jiexi.length; i += 3) {
                         // 将每组三个十六进制数转换为十进制值并合并
-                        let group = jiexi.slice(i, i + 3).map(hex => parseInt(hex, 16))
+                        let group = jiexi.slice(i, i + 3).map((hex) => parseInt(hex, 16));
                         // 计算合并值，这里我们将三个值合并成一个 24 位的整数
-                        let combinedValue = ((group[0] << 24) | (group[1] << 16) | (group[2] << 8)) / 255
+                        let combinedValue = ((group[0] << 24) | (group[1] << 16) | (group[2] << 8)) / 255;
                         // let combinedValue = (group[0] << 16) | (group[1] << 8) | group[2];
-                        combinedValue = (combinedValue * 2.5 * 1000) / (2 ** 23 - 1) / 6
-                        results.push(combinedValue)
+                        combinedValue = (combinedValue * 2.5 * 1000) / (2 ** 23 - 1) / 6;
+                        results.push(combinedValue);
                       }
-                      const resultdata = Array.from({ length: 8 }, () => [])
+                      const resultdata = Array.from({ length: 8 }, () => []);
                       // 遍历原数组，将元素按照索引分配到相应的数组中
                       results.forEach((item, index) => {
-                        resultdata[index % 8].push(item)
-                      })
+                        resultdata[index % 8].push(item);
+                      });
                       //III
-                      resultdata[8] = resultdata[2].map((value, index) => value - resultdata[1][index])
+                      resultdata[8] = resultdata[2].map((value, index) => value - resultdata[1][index]);
                       //aVR
-                      resultdata[9] = resultdata[1].map((value, index) => -(value + resultdata[2][index]) / 2)
+                      resultdata[9] = resultdata[1].map((value, index) => -(value + resultdata[2][index]) / 2);
                       //aVL
-                      resultdata[10] = resultdata[1].map((value, index) => (value - resultdata[2][index]) / 2)
+                      resultdata[10] = resultdata[1].map((value, index) => (value - resultdata[2][index]) / 2);
                       //aVF
-                      resultdata[11] = resultdata[2].map((value, index) => (value - resultdata[1][index]) / 2)
-                      zhi = false
+                      resultdata[11] = resultdata[2].map((value, index) => (value - resultdata[1][index]) / 2);
+                      zhi = false;
                     } else {
-                      data = that.formatString(that.ab2hex(res.value))
-                      zhi = true
+                      data = that.formatString(that.ab2hex(res.value));
+                      zhi = true;
                     }
-                  })
+                  });
                 },
-                fail: res => {
-                  console.log('启用 notify 功能失败', res)
-                  uni.hideLoading()
-                  uni.showToast({ title: '连接失败', icon: 'none' })
+                fail: (res) => {
+                  console.log('启用 notify 功能失败', res);
+                  uni.hideLoading();
+                  uni.showToast({ title: '连接失败', icon: 'none' });
                 }
-              })
-            }, 800)
+              });
+            }, 800);
           } else {
             setTimeout(() => {
               uni.notifyBLECharacteristicValueChange({
@@ -224,55 +226,55 @@ export default {
                 deviceId: items.deviceId,
                 serviceId: '6e4000f1-b5a3-f393-e0a9-e50e24dcca9e',
                 characteristicId: '6e4000f3-b5a3-f393-e0a9-e50e24dcca9e',
-                success: res => {
-                  console.log('启用监听了', res)
-                  that.yijingbleDevs.push(items)
-                  that.bleDevs = that.bleDevs.filter(dev => dev.name !== items.name)
+                success: (res) => {
+                  console.log('启用监听了', res);
+                  that.yijingbleDevs.push(items);
+                  that.bleDevs = that.bleDevs.filter((dev) => dev.name !== items.name);
                   uni.showToast({
                     title: '连接成功',
                     icon: 'success'
-                  })
-                  uni.hideLoading()
-                  uni.onBLECharacteristicValueChange(res => {
-                    const data = new Uint8Array(res.value)
-                    console.log('解析后的字节数组：', data)
-                  })
+                  });
+                  uni.hideLoading();
+                  uni.onBLECharacteristicValueChange((res) => {
+                    const data = new Uint8Array(res.value);
+                    // console.log('解析后的字节数组：', data)
+                  });
                 },
-                fail: res => {
-                  console.log('启用 notify 功能失败', res)
-                  uni.hideLoading()
-                  uni.showToast({ title: '连接失败', icon: 'none' })
+                fail: (res) => {
+                  console.log('启用 notify 功能失败', res);
+                  uni.hideLoading();
+                  uni.showToast({ title: '连接失败', icon: 'none' });
                 }
-              })
-            }, 800)
+              });
+            }, 800);
           }
         },
         fail(res) {
-          console.log('蓝牙连接失败', res)
+          console.log('蓝牙连接失败', res);
           uni.showToast({
             title: '连接失败',
             icon: 'none'
-          })
+          });
         }
-      })
+      });
     },
     // 断开蓝牙连接
     close(item) {
-      let that = this
+      let that = this;
       uni.closeBLEConnection({
         deviceId: item.deviceId,
         success(res) {
-          console.log(`${item.deviceId}断开成功`)
+          console.log(`${item.deviceId}断开成功`);
           // 从 yijingbleDevs 中移除 name 等于 item.name 的项
-          that.yijingbleDevs = that.yijingbleDevs.filter(dev => dev.name !== item.name)
+          that.yijingbleDevs = that.yijingbleDevs.filter((dev) => dev.name !== item.name);
         },
         fail(res) {
-          console.log(`${item.deviceId}断开失败`)
+          console.log(`${item.deviceId}断开失败`);
         }
-      })
+      });
     }
   }
-}
+};
 </script>
 
 <style>
