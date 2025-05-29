@@ -3,7 +3,7 @@
     <!-- 控制按钮 -->
     <button @click="initAndStartScan">初始化并开始搜索</button>
 
-    <button @click="downloadPPGDataAsTxt">下载PPG数据</button>
+    <!-- <button @click="downloadPPGDataAsTxt">下载PPG数据</button> -->
     <button v-if="isScanning" @click="stopScan">停止搜索</button>
     <!-- <button @click="print">打印日志</button> -->
 

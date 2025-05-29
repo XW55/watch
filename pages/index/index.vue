@@ -26,7 +26,7 @@ export default {
   data() {
     return {};
   },
-  mounted() {},
+
   methods: {
     tiaozhuan() {
       if (!uni.getStorageSync('token')) {
@@ -50,4 +50,4 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped></style>
