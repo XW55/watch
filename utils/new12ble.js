@@ -262,7 +262,8 @@ function handleBLEDeviceServices(deviceId) {
                 if (zhi) {
                   data = data + ' ' + formatString(ab2hex(res.value));
                   let hexArray = data.split(' ');
-                  // console.log(hexArray.length);
+                  console.log(hexArray);
+                  console.log(hexArray.length);
                   let jiexi = hexArray.slice(11, 251);
                   let results = [];
                   for (let i = 0; i < jiexi.length; i += 3) {
