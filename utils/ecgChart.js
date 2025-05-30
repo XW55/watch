@@ -114,7 +114,7 @@ export const ecgConfig = (config) => {
 }
 
 export function setXAxis(length) {
-  console.log('接受的数值', length);
+  // console.log('接受的数值', length);
 
   // 如果数据长度小于等于1，则直接返回空数组或处理特殊情况
   if (length <= 1) return [];
@@ -1414,7 +1414,7 @@ export function setMarkLineData(length, step) {
     });
   }
 
-  console.log('markLineData', markLineData);
+  // console.log('markLineData', markLineData);
   return markLineData;
 }
 export function getEegMarkLineData(length, sampleRate = 250) {
