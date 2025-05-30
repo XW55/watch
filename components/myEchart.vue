@@ -47,6 +47,7 @@ export default {
         // 监听配置数据变化，并重新渲染
         updateEcharts(newValue, oldValue, ownerInstance, instance) {
             if (this.myChart) {
+                this.myChart.clear();
                 this.myChart.setOption(newValue);
             }
         },

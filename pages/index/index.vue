@@ -18,6 +18,24 @@
     >
       12导检测
     </view>
+    <view
+      class=""
+      @click="huatu"
+      style="
+        width: 95%;
+        margin: 0 auto;
+        border-radius: 15rpx;
+        background-color: #ff6c00;
+        padding: 15rpx;
+        color: #fff;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      模拟12导联数据画图
+    </view>
   </view>
 </template>
 
@@ -45,6 +63,11 @@ export default {
           url: '/pageCheck/pages/search/search'
         });
       }
+    },
+    huatu() {
+      uni.navigateTo({
+        url: '/pageCheck/pages/ecgChart/ecgChart'
+      });
     }
   }
 };

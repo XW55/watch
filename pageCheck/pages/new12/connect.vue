@@ -93,7 +93,7 @@
         </view>
       </view>
     </view>
-    <view v-else class="cv_list">
+    <!-- <view v-else class="cv_list">
       <canvas
         class="cv_bg"
         ref="canvasEl"
@@ -109,11 +109,18 @@
         id="cv"
         :style="{ height: canvasHeight + 'px', width: cv_width + 'px' }"
       ></canvas>
+    </view> -->
+    <view v-else class="chartBox">
+      <view class="chartItem" v-for="(item, i) in optionss" :key="i">
+        <MyChart :option="item.data" :id="'ecgChart' + i"></MyChart>
+      </view>
     </view>
   </view>
 </template>
 
 <script>
+import { ecgConfig, ecgData } from '@/utils/ecgChart.js';
+import MyChart from '@/components/myEchart.vue';
 import { setOnDataParsed, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/new12ble';
 import { mapState } from 'vuex';
 import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
@@ -121,8 +128,12 @@ import { DrawEcg, DrawHreat } from '../../components/xindraw12.js';
 import { xindraw, clear, updateAndDrawEcg } from '../../components/xindraw12Re.js';
 // import filterUtils from '../../components/new12daojisuan.js';
 export default {
+  components: {
+    MyChart
+  },
   data() {
     return {
+      optionss: [],
       // shuzichegnfa: 100,
       timer: null,
       isSuccessful: false,
@@ -318,11 +329,7 @@ export default {
       }
     });
     setfuyes((data) => {
-      if (data) {
-        if (this.context) {
-          console.log('触发一回画12导联');
-          xindraw(this.context, this.canvasHeight / 12, data);
-        }
+      if (data) {        this.optionss = data;
       }
     });
   },
@@ -523,9 +530,9 @@ export default {
         this.$nextTick(() => {
           setTimeout(async () => {
             try {
-              await this.getContextBg();
-              this.drawPar(this.contextBg);
-              await this.getContexts();
+              // await this.getContextBg();
+              // this.drawPar(this.contextBg);
+              // await this.getContexts();
             } catch (e) {
               console.error('获取上下文时出错:', e);
             }
@@ -558,121 +565,121 @@ export default {
     clearTimmer() {
       this.cveObj?.clearTimer();
       this.cvhObj?.clearTimer();
-    },
+    }
     // 画12导数据======================================================
     /**
     获取12导联实例
     */
-    getContexts() {
-      // #ifdef APP || H5
-      this.context = uni.createCanvasContext('cv');
-      // #endif
-      // #ifdef MP-WEIXIN
-      return new Promise((resolve) => {
-        uni
-          .createSelectorQuery()
-          .in(this)
-          .select('#cv')
-          .fields({
-            node: true,
-            size: true
-          })
-          .exec((res) => {
-            const canvas = res[0].node;
-            const dpr = uni.getSystemInfoSync().pixelRatio;
-            canvas.width = res[0].width * dpr;
-            canvas.height = res[0].height * dpr;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-            this.context = ctx;
-            resolve(ctx);
-          });
-      });
-      // #endif
-    },
+    // getContexts() {
+    //   // #ifdef APP || H5
+    //   this.context = uni.createCanvasContext('cv');
+    //   // #endif
+    //   // #ifdef MP-WEIXIN
+    //   return new Promise((resolve) => {
+    //     uni
+    //       .createSelectorQuery()
+    //       .in(this)
+    //       .select('#cv')
+    //       .fields({
+    //         node: true,
+    //         size: true
+    //       })
+    //       .exec((res) => {
+    //         const canvas = res[0].node;
+    //         const dpr = uni.getSystemInfoSync().pixelRatio;
+    //         canvas.width = res[0].width * dpr;
+    //         canvas.height = res[0].height * dpr;
+    //         const ctx = canvas.getContext('2d');
+    //         ctx.scale(dpr, dpr);
+    //         this.context = ctx;
+    //         resolve(ctx);
+    //       });
+    //   });
+    //   // #endif
+    // },
     /**
     获取12导联红框实例
     */
-    getContextBg() {
-      // #ifdef APP || H5
-      this.contextBg = uni.createCanvasContext('cv_bg');
-      // #endif
-      // #ifdef MP-WEIXIN
-      return new Promise((resolve) => {
-        uni
-          .createSelectorQuery()
-          .in(this)
-          .select('#cv_bg')
-          .fields({
-            node: true,
-            size: true
-          })
-          .exec((res) => {
-            const canvas = res[0].node;
-            const dpr = uni.getSystemInfoSync().pixelRatio;
-            canvas.width = res[0].width * dpr;
-            console.log(` canvas.width为${canvas.width}`);
-            canvas.height = res[0].height * dpr;
-            console.log(` canvas.height为${canvas.height}`);
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-            this.contextBg = ctx;
-            resolve(ctx);
-          });
-      });
-      // #endif
-    },
+    // getContextBg() {
+    //   // #ifdef APP || H5
+    //   this.contextBg = uni.createCanvasContext('cv_bg');
+    //   // #endif
+    //   // #ifdef MP-WEIXIN
+    //   return new Promise((resolve) => {
+    //     uni
+    //       .createSelectorQuery()
+    //       .in(this)
+    //       .select('#cv_bg')
+    //       .fields({
+    //         node: true,
+    //         size: true
+    //       })
+    //       .exec((res) => {
+    //         const canvas = res[0].node;
+    //         const dpr = uni.getSystemInfoSync().pixelRatio;
+    //         canvas.width = res[0].width * dpr;
+    //         console.log(` canvas.width为${canvas.width}`);
+    //         canvas.height = res[0].height * dpr;
+    //         console.log(` canvas.height为${canvas.height}`);
+    //         const ctx = canvas.getContext('2d');
+    //         ctx.scale(dpr, dpr);
+    //         this.contextBg = ctx;
+    //         resolve(ctx);
+    //       });
+    //   });
+    //   // #endif
+    // },
     /**
     绘制新12导联红框
     */
-    drawPar(ctx) {
-      //上面的绘制方式为uniapp的canvas绘制方式，下面的为原生的canvas绘制方式
-      let lineColor = '#F2847F';
-      for (let i = 0; i < 26; i++) {
-        //设置颜色
-        ctx.strokeStyle = lineColor;
-        //虚线
-        ctx.setLineDash([5, 7]);
-        ctx.beginPath();
-        ctx.moveTo((i * this.cv_width) / 25, 0);
-        ctx.lineTo((i * this.cv_width) / 25, this.canvasHeight);
-        ctx.closePath();
-        ctx.stroke();
-      }
-      //设置线宽
-      ctx.lineWidth = 1;
-      //画线
-      for (let i = 0; i < 12; i++) {
-        //设置颜色
-        ctx.strokeStyle = '#F2847F';
-        //实线
-        ctx.setLineDash([0, 0]);
-        ctx.beginPath();
-        ctx.moveTo(0, this.cv_height * (i + 1));
-        ctx.lineTo(this.cv_width, this.cv_height * (i + 1));
-        ctx.closePath();
-        ctx.stroke();
-        for (let j = 1; j <= 3; j++) {
-          //设置颜色
-          ctx.strokeStyle = lineColor;
-          //虚线
-          ctx.setLineDash([5, 3]);
-          ctx.beginPath();
-          ctx.moveTo(0, this.cv_height * (i + j * 0.25));
-          ctx.lineTo(this.cv_width, this.cv_height * (i + j * 0.25));
-          ctx.closePath();
-          ctx.stroke();
-        }
-      }
-      const arr12 = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
-      ctx.font = '12px Arial';
-      ctx.fillStyle = '#06f';
-      for (let i = 0; i < 12; i++) {
-        ctx.fillText(arr12[i], 10, this.cv_height * (i + 1) - 10);
-      }
-      // 应用所有绘图操作到canvas上
-      ctx.draw(true); // 清空画布并绘制新内容
-    }
+    // drawPar(ctx) {
+    //   //上面的绘制方式为uniapp的canvas绘制方式，下面的为原生的canvas绘制方式
+    //   let lineColor = '#F2847F';
+    //   for (let i = 0; i < 26; i++) {
+    //     //设置颜色
+    //     ctx.strokeStyle = lineColor;
+    //     //虚线
+    //     ctx.setLineDash([5, 7]);
+    //     ctx.beginPath();
+    //     ctx.moveTo((i * this.cv_width) / 25, 0);
+    //     ctx.lineTo((i * this.cv_width) / 25, this.canvasHeight);
+    //     ctx.closePath();
+    //     ctx.stroke();
+    //   }
+    //   //设置线宽
+    //   ctx.lineWidth = 1;
+    //   //画线
+    //   for (let i = 0; i < 12; i++) {
+    //     //设置颜色
+    //     ctx.strokeStyle = '#F2847F';
+    //     //实线
+    //     ctx.setLineDash([0, 0]);
+    //     ctx.beginPath();
+    //     ctx.moveTo(0, this.cv_height * (i + 1));
+    //     ctx.lineTo(this.cv_width, this.cv_height * (i + 1));
+    //     ctx.closePath();
+    //     ctx.stroke();
+    //     for (let j = 1; j <= 3; j++) {
+    //       //设置颜色
+    //       ctx.strokeStyle = lineColor;
+    //       //虚线
+    //       ctx.setLineDash([5, 3]);
+    //       ctx.beginPath();
+    //       ctx.moveTo(0, this.cv_height * (i + j * 0.25));
+    //       ctx.lineTo(this.cv_width, this.cv_height * (i + j * 0.25));
+    //       ctx.closePath();
+    //       ctx.stroke();
+    //     }
+    //   }
+    //   const arr12 = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
+    //   ctx.font = '12px Arial';
+    //   ctx.fillStyle = '#06f';
+    //   for (let i = 0; i < 12; i++) {
+    //     ctx.fillText(arr12[i], 10, this.cv_height * (i + 1) - 10);
+    //   }
+    //   // 应用所有绘图操作到canvas上
+    //   ctx.draw(true); // 清空画布并绘制新内容
+    // }
   }
 };
 </script>
@@ -687,6 +694,16 @@ page {
 view,
 text {
   box-sizing: border-box;
+}
+</style>
+<!-- 12导ecg画图 -->
+<style lang="scss" scoped>
+.chartBox {
+  width: 100%;
+  height: 100vh;
+  .chartItem {
+    height: calc((100vh - 120px) / 12);
+  }
 }
 </style>
 <style lang="scss" scoped>

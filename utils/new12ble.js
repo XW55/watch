@@ -1,5 +1,8 @@
 import filterUtils from '@/pageCheck/components/new12daojisuan.js';
 import store from '@/store'
+import {
+  ecgConfig
+} from '@/utils/ecgChart.js';
 
 function formatString(str) {
   // 将字符串按两字一组分割
@@ -262,8 +265,8 @@ function handleBLEDeviceServices(deviceId) {
                 if (zhi) {
                   data = data + ' ' + formatString(ab2hex(res.value));
                   let hexArray = data.split(' ');
-                  console.log(hexArray);
-                  console.log(hexArray.length);
+                  // console.log(hexArray);
+                  // console.log(hexArray.length);
                   let jiexi = hexArray.slice(11, 251);
                   let results = [];
                   for (let i = 0; i < jiexi.length; i += 3) {
@@ -329,7 +332,7 @@ function handleBLEDeviceServices(deviceId) {
                     V4 = V4.slice(5000);
                     V5 = V5.slice(5000);
                     V6 = V6.slice(5000);
-                    if (onDataCallback) onDataCallback(dataArys);
+                    // if (onDataCallback) onDataCallback(dataArys);
                   }
                   zijie++;
                   wanzhegnshuju.I = wanzhegnshuju.I.concat(resultdata[1]);
@@ -358,21 +361,89 @@ function handleBLEDeviceServices(deviceId) {
                         console.log(e);
                       }
                       wanzhegnshuju.II = [];
+                      ecgData = []
                     } else {
-                      ecgData = [
-                        filterUtils.wlFilter(wanzhegnshuju.I.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.II.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.III.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.aVR.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.aVL.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.aVF.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V1.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V2.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V3.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V4.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V5.slice(changdu * -1)),
-                        filterUtils.wlFilter(wanzhegnshuju.V6.slice(changdu * -1))
-                      ];
+                      // ecgData = [
+                      //   filterUtils.wlFilter(wanzhegnshuju.I.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.II.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.III.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.aVR.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.aVL.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.aVF.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V1.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V2.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V3.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V4.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V5.slice(changdu * -1)),
+                      //   filterUtils.wlFilter(wanzhegnshuju.V6.slice(changdu * -1))
+                      // ];
+                      // this.options = ecgConfig({ name: 'II', data: ecgData });
+                      // console.log(this.options);
+                      ecgData = [{
+                        data: ecgConfig({
+                          name: 'I',
+                          data: filterUtils.wlFilter(wanzhegnshuju.I.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'II',
+                          data: filterUtils.wlFilter(wanzhegnshuju.II.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'III',
+                          data: filterUtils.wlFilter(wanzhegnshuju.III.slice(changdu * -
+                            1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'aVR',
+                          data: filterUtils.wlFilter(wanzhegnshuju.aVR.slice(changdu * -
+                            1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'aVL',
+                          data: filterUtils.wlFilter(wanzhegnshuju.aVL.slice(changdu * -
+                            1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'aVF',
+                          data: filterUtils.wlFilter(wanzhegnshuju.aVF.slice(changdu * -
+                            1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V1',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V1.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V2',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V2.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V3',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V3.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V4',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V4.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V5',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V5.slice(changdu * -1))
+                        })
+                      }, {
+                        data: ecgConfig({
+                          name: 'V6',
+                          data: filterUtils.wlFilter(wanzhegnshuju.V6.slice(changdu * -1))
+                        })
+                      }];
                       try {
                         setfuye(ecgData)
                       } catch (e) {
@@ -390,6 +461,7 @@ function handleBLEDeviceServices(deviceId) {
                       wanzhegnshuju.V4 = [];
                       wanzhegnshuju.V5 = [];
                       wanzhegnshuju.V6 = [];
+                      ecgData = []
                     }
                   }
                   zhi = false;
