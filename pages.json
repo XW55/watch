@@ -26,6 +26,12 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/demos/demos",
+      "style": {
+        "navigationBarTitleText": ""
+      }
     }
   ],
   "subPackages": [{
@@ -101,6 +107,11 @@
       {
         "pagePath": "pages/demo/demo",
         "text": "示例"
+        // "iconPath": "static/tabs/demo.png",
+        // "selectedIconPath": "static/tabs/demo_active.png"
+      }, {
+        "pagePath": "pages/demos/demos",
+        "text": "示例2"
         // "iconPath": "static/tabs/demo.png",
         // "selectedIconPath": "static/tabs/demo_active.png"
       }, {

@@ -218,7 +218,7 @@ export default {
                   uni.showToast({ title: '连接失败', icon: 'none' });
                 }
               });
-            }, 800);
+            }, 2000);
           } else {
             setTimeout(() => {
               uni.notifyBLECharacteristicValueChange({
@@ -246,7 +246,7 @@ export default {
                   uni.showToast({ title: '连接失败', icon: 'none' });
                 }
               });
-            }, 800);
+            }, 2000);
           }
         },
         fail(res) {
