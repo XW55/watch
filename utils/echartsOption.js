@@ -60,3 +60,85 @@ export const xyzOption = {
     }
   }
 }
+
+// @/utils/echartsOption.js
+
+export const zhiOption = {
+  legend: {
+    data: ['X', 'Y', 'Z']
+  },
+  grid: {
+    left: 15,
+    right: 10,
+    bottom: 0,
+    top: 15
+  },
+  xAxis: {
+    type: 'category',
+    show: true,
+    axisLine: {
+      show: false
+    },
+    axisTick: {
+      show: false
+    },
+    axisLabel: {
+      show: false
+    }, // 隐藏 x 轴标签
+    splitLine: {
+      show: false
+    }, // 隐藏网格线
+    data: [] // categories 数据会在这里动态更新
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: {
+      lineStyle: {
+        type: 'dashed',
+        width: 2,
+        color: '#ccc'
+      }
+    },
+    axisLabel: {
+      formatter: function(value) {
+        return value.toFixed(3); // 模拟 toFixed(3)
+      }
+    },
+    splitNumber: 4
+  },
+  series: [{
+      name: 'X',
+      type: 'line',
+      smooth: true, // 曲线
+      symbol: 'none', // 不显示点
+      lineStyle: {
+        width: 2,
+        color: '#1890FF'
+      },
+      data: []
+    },
+    {
+      name: 'Y',
+      type: 'line',
+      smooth: true,
+      symbol: 'none',
+      lineStyle: {
+        width: 2,
+        color: '#91CB74'
+      },
+      data: []
+    },
+    {
+      name: 'Z',
+      type: 'line',
+      smooth: true,
+      symbol: 'none',
+      lineStyle: {
+        width: 2,
+        color: '#FAC858'
+      },
+      data: []
+    }
+  ],
+  animation: false
+};

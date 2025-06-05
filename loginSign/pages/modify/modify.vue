@@ -598,12 +598,6 @@ export default {
           if (res.data.code == 200) {
             uni.setStorageSync('hospName', this.selectHospital);
             // 修改 barUser 数据
-            this.setBarUser({
-              name: this.name,
-              tel: tel,
-              hospName: this.selectHospital,
-              sex: this.sex
-            });
             uni.showToast({
               title: '提交成功',
               icon: 'none'
@@ -622,7 +616,20 @@ export default {
           console.log(err);
         });
     },
+    calculateAgeRealTime(birthDateString) {
+      const birthDate = new Date(birthDateString);
+      const today = new Date(); // 使用当前系统时间
 
+      let age = today.getFullYear() - birthDate.getFullYear();
+
+      const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+
+      if (today < birthdayThisYear) {
+        age--;
+      }
+
+      return age;
+    },
     getDate(type) {
       const date = new Date();
       let year = date.getFullYear();

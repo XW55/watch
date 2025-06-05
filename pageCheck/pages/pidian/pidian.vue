@@ -1,47 +1,15 @@
 <template>
   <view class="container">
-    <!-- 控制按钮 -->
-    <button @click="initAndStartScan">初始化并开始搜索</button>
-
-    <!-- <button @click="downloadPPGDataAsTxt">下载PPG数据</button> -->
-    <button v-if="isScanning" @click="stopScan">停止搜索</button>
-    <!-- <button @click="print">打印日志</button> -->
-
-    <!-- 设备列表 -->
-    <text v-if="devices.length === 0 && !isScanning">暂无设备，请开始搜索</text>
-    <text v-if="devices.length === 0 && isScanning">正在搜索中...</text>
-
-    <block v-for="device in devices" :key="device.deviceId">
-      <view class="device-item" @click="connectToDevice(device)">
-        <text>{{ device.name || '未知设备' }} - {{ device.deviceId }}</text>
-      </view>
-    </block>
-
-    <!-- 实时数据展示 -->
-    <!--    <view v-if="bleData" class="data-display">
-      <h3>最新数据：</h3>
-      <pre>{{ JSON.stringify(bleData, null, 2) }}</pre>
-    </view> -->
-
     <!-- 折线图展示 -->
     <qiun-data-charts type="line" :opts="xyzOption" :chartData="chartData" />
     <qiun-data-charts type="line" :opts="baseOption" :chartData="redData" />
     <qiun-data-charts type="line" :opts="gsrOption" :chartData="gsrData" />
-
-    <!-- 状态提示 -->
-    <text v-if="status">{{ status }}</text>
   </view>
 </template>
 
 <script>
-import {
-  initBluetooth,
-  startScanBluetooth,
-  stopScanBluetooth,
-  getDiscoveredDevices,
-  connectToDevice
-} from '@/utils/bluetooth';
-import { processIncomingData, setOnDataParsed, ppgValuesHistory, gsrValuesHistory } from '@/utils/config.js'; // 注意路径可能需要调整
+import { setOnDataParseds, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/zongble.js';
+import { setOnDataParsed, ppgValuesHistory, gsrValuesHistory } from '@/utils/config.js'; // 注意路径可能需要调整
 import { baseOption, xyzOption } from '@/utils/echartsOption.js';
 import { updateEdaData } from '@/api/algorithm.js';
 import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
@@ -56,10 +24,6 @@ export default {
       tempGsrData: [], // 临时存储
       isUpdating: false, // 标识是否正在更新
       baseOption,
-      isScanning: false,
-      devices: [],
-      deviceSn: '',
-      status: '',
       bleData: null, // 存储解析后的数据
       chartData: {
         categories: [], // 时间戳作为X轴标签
@@ -121,23 +85,26 @@ export default {
     };
   },
   mounted() {
-    this.updateDeviceList();
     // 注册回调，接收解析后的数据
-    // setOnDataParsed((type, data) => {
-    //   if (type.toUpperCase() == 'GSR' && this.isLog) {
-    //     console.log('皮电', data);
-    //     gsrUpload.push(...data.gsr);
-    //     console.log('长度', gsrUpload.length);
-    //     if (gsrUpload.length % 100 == 0) {
-    //       this.uploadGsrData();
-    //     }
-    //   } else {
-    //     // console.log('红外', data);
-    //   }
-    //   // console.log(`收到 ${type.toUpperCase()} 数据`, data);
-    //   // this.bleData = data;
-    //   this.updateChartData(data);
-    // });
+    setOnDataParsed((type, data) => {
+      if (type.toUpperCase() == 'GSR' && this.isLog) {
+        // console.log('皮电', data);
+        gsrUpload.push(...data.gsr);
+        // console.log('长度', gsrUpload.length);
+        if (gsrUpload.length % 100 == 0) {
+          // this.uploadGsrData();
+        }
+      } else {
+        // console.log('红外', data);
+      }
+      // console.log(`收到 ${type.toUpperCase()} 数据`, data);
+      // this.bleData = data;
+      this.updateChartData(data);
+    }, 2);
+  },
+  onUnload() {
+    // console.log('3333333333333333333333333333333333333');
+    // setkaishijieshou(false);
   },
   methods: {
     uploadGsrData() {
@@ -151,7 +118,7 @@ export default {
         age: 20,
         patientPhone: '15360544778',
         patientCode: '411325200310186547',
-        deviceSn: this.deviceSn,
+
         hospName: '医院名称',
         samplingRate: 10,
         recordDate: getCurrentTimeFormatted()
@@ -171,58 +138,9 @@ export default {
           // 失败时不清空缓存，下次重试
         });
     },
-    downloadPPGDataAsTxt() {
-      this.isLog = false;
-      console.log('打印数据');
-      console.log(ppgValuesHistory);
-      console.log(gsrValuesHistory);
-    },
-    async initAndStartScan() {
-      this.devices = [];
-      try {
-        await initBluetooth();
-        this.isScanning = true;
-        this.status = '正在搜索...';
-        await startScanBluetooth();
-      } catch (err) {
-        this.status = '蓝牙初始化失败';
-      }
-    },
-
-    async stopScan() {
-      try {
-        await stopScanBluetooth();
-        this.isScanning = false;
-        this.status = '搜索已停止';
-      } catch (err) {
-        this.status = '停止搜索失败';
-      }
-    },
-
-    updateDeviceList() {
-      setInterval(() => {
-        this.devices = getDiscoveredDevices();
-      }, 500);
-    },
-
-    async connectToDevice(device) {
-      this.deviceSn = device.deviceId;
-      this.status = `正在连接 ${device.deviceId}...`;
-      try {
-        await connectToDevice(device.deviceId, (data) => {
-          processIncomingData(data); // 处理接收到的数据
-        });
-        this.status = `连接成功：${device.deviceId}`;
-      } catch (err) {
-        this.status = `连接失败：${err.errMsg}`;
-      }
-    },
-
-    print() {
-      console.log('当前缓冲区:', this.buffer);
-    },
 
     updateChartData(data) {
+      // console.log('答应');
       if (data.acc) {
         this.chartData.categories.push(++this.accIndex);
         this.chartData.series[0].data.push(data.acc.x); // X轴

@@ -93,23 +93,6 @@
         </view>
       </view>
     </view>
-    <!-- <view v-else class="cv_list">
-      <canvas
-        class="cv_bg"
-        ref="canvasEl"
-        canvas-id="cv_bg"
-        type="2d"
-        id="cv_bg"
-        :style="{ height: canvasHeight + 'px', width: cv_width + 'px' }"
-      ></canvas>
-      <canvas
-        class="cv_item"
-        canvas-id="cv"
-        type="2d"
-        id="cv"
-        :style="{ height: canvasHeight + 'px', width: cv_width + 'px' }"
-      ></canvas>
-    </view> -->
     <view v-else class="chartBox">
       <view class="chartItem" v-for="(item, i) in optionss" :key="i">
         <MyChart :option="item.data" :id="'ecgChart' + i"></MyChart>
@@ -121,11 +104,12 @@
 <script>
 import { ecgConfig, ecgData } from '@/utils/ecgChart.js';
 import MyChart from '@/components/myEchart.vue';
-import { setOnDataParsed, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/new12ble';
+// import { setOnDataParsed, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/new12ble';
+import { setOnDataParseds, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/zongble.js';
 import { mapState } from 'vuex';
 import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
 import { DrawEcg, DrawHreat } from '../../components/xindraw12.js';
-import { xindraw, clear, updateAndDrawEcg } from '../../components/xindraw12Re.js';
+// import { xindraw, clear, updateAndDrawEcg } from '../../components/xindraw12Re.js';
 // import filterUtils from '../../components/new12daojisuan.js';
 export default {
   components: {
@@ -272,12 +256,6 @@ export default {
         QTc: 'QTc间期过长表示心脏去极化和复极化的时间延长，这一种病可能是先天的，也有可能是因为治疗其他心脏病的药物而引起的后天病症。治疗方面可使用药物治疗或是手术植入心脏整流去颤器。'
       },
       selectTips: 'GengSi',
-      // 画12导===========================================
-      context: {},
-      ecgData: [],
-      cv_width: 375,
-      cv_height: 60, //每行的高度
-      list: [],
       ecgType: 'DECG12SX'
     };
   },
@@ -285,17 +263,9 @@ export default {
     ...mapState({
       barUser: (state) => state.barUser,
       ble: (state) => state.ble
-    }),
-    canvasHeight() {
-      return this.cv_height * 12;
-    }
+    })
   },
   onLoad(options) {
-    const system = uni.getSystemInfoSync();
-    this.cv_width = system.windowWidth;
-    this.cv_height = (this.cv_width / 25) * 4;
-    console.log('width:', this.cv_width);
-    console.log('height:', this.cv_height);
     let width = uni.getSystemInfoSync().windowWidth;
     this.leftDistance = (width / 750) * 320;
     this.leftDistance = Math.round(this.leftDistance);
@@ -317,7 +287,7 @@ export default {
     this.ctxFig = uni.createCanvasContext('cvs-fig');
     this.cveObj = new DrawEcg(this.ctxFig, 640, 328, this.ecgType, this.ecgShowLead);
     // 注册回调，接收解析后的数据并上传
-    setOnDataParsed((data) => {
+    setOnDataParseds((data) => {
       if (data) {
         this.uploadDataL_LTP(data);
       }
@@ -327,9 +297,10 @@ export default {
         console.log('画II导联');
         this.cveObj?.drawEcg(data);
       }
-    });
+    }, 2);
     setfuyes((data) => {
-      if (data) {        this.optionss = data;
+      if (data) {
+        this.optionss = data;
       }
     });
   },
@@ -337,7 +308,6 @@ export default {
   onUnload() {
     console.log('卸载了');
     setkaishijieshou(false);
-    clear();
     this.clearTimmer();
     // 取消获取表格数据
     clearInterval(this.timer);
@@ -526,22 +496,80 @@ export default {
       this.clearTimmer();
       this.qiehuan = false;
       getqiehuan(this.qiehuan);
-      try {
-        this.$nextTick(() => {
-          setTimeout(async () => {
-            try {
-              // await this.getContextBg();
-              // this.drawPar(this.contextBg);
-              // await this.getContexts();
-            } catch (e) {
-              console.error('获取上下文时出错:', e);
-            }
-          }, 100);
-        });
-      } catch (e) {
-        console.log('主页画II导联报错');
-        console.log(e);
-      }
+      this.optionss = [
+        {
+          data: ecgConfig({
+            name: 'I',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'II',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'III',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'aVR',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'aVL',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'aVF',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V1',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V2',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V3',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V4',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V5',
+            data: new Array(1250).fill(0)
+          })
+        },
+        {
+          data: ecgConfig({
+            name: 'V6',
+            data: new Array(1250).fill(0)
+          })
+        }
+      ];
     },
     /**
     返回到新12导主页面
@@ -566,120 +594,6 @@ export default {
       this.cveObj?.clearTimer();
       this.cvhObj?.clearTimer();
     }
-    // 画12导数据======================================================
-    /**
-    获取12导联实例
-    */
-    // getContexts() {
-    //   // #ifdef APP || H5
-    //   this.context = uni.createCanvasContext('cv');
-    //   // #endif
-    //   // #ifdef MP-WEIXIN
-    //   return new Promise((resolve) => {
-    //     uni
-    //       .createSelectorQuery()
-    //       .in(this)
-    //       .select('#cv')
-    //       .fields({
-    //         node: true,
-    //         size: true
-    //       })
-    //       .exec((res) => {
-    //         const canvas = res[0].node;
-    //         const dpr = uni.getSystemInfoSync().pixelRatio;
-    //         canvas.width = res[0].width * dpr;
-    //         canvas.height = res[0].height * dpr;
-    //         const ctx = canvas.getContext('2d');
-    //         ctx.scale(dpr, dpr);
-    //         this.context = ctx;
-    //         resolve(ctx);
-    //       });
-    //   });
-    //   // #endif
-    // },
-    /**
-    获取12导联红框实例
-    */
-    // getContextBg() {
-    //   // #ifdef APP || H5
-    //   this.contextBg = uni.createCanvasContext('cv_bg');
-    //   // #endif
-    //   // #ifdef MP-WEIXIN
-    //   return new Promise((resolve) => {
-    //     uni
-    //       .createSelectorQuery()
-    //       .in(this)
-    //       .select('#cv_bg')
-    //       .fields({
-    //         node: true,
-    //         size: true
-    //       })
-    //       .exec((res) => {
-    //         const canvas = res[0].node;
-    //         const dpr = uni.getSystemInfoSync().pixelRatio;
-    //         canvas.width = res[0].width * dpr;
-    //         console.log(` canvas.width为${canvas.width}`);
-    //         canvas.height = res[0].height * dpr;
-    //         console.log(` canvas.height为${canvas.height}`);
-    //         const ctx = canvas.getContext('2d');
-    //         ctx.scale(dpr, dpr);
-    //         this.contextBg = ctx;
-    //         resolve(ctx);
-    //       });
-    //   });
-    //   // #endif
-    // },
-    /**
-    绘制新12导联红框
-    */
-    // drawPar(ctx) {
-    //   //上面的绘制方式为uniapp的canvas绘制方式，下面的为原生的canvas绘制方式
-    //   let lineColor = '#F2847F';
-    //   for (let i = 0; i < 26; i++) {
-    //     //设置颜色
-    //     ctx.strokeStyle = lineColor;
-    //     //虚线
-    //     ctx.setLineDash([5, 7]);
-    //     ctx.beginPath();
-    //     ctx.moveTo((i * this.cv_width) / 25, 0);
-    //     ctx.lineTo((i * this.cv_width) / 25, this.canvasHeight);
-    //     ctx.closePath();
-    //     ctx.stroke();
-    //   }
-    //   //设置线宽
-    //   ctx.lineWidth = 1;
-    //   //画线
-    //   for (let i = 0; i < 12; i++) {
-    //     //设置颜色
-    //     ctx.strokeStyle = '#F2847F';
-    //     //实线
-    //     ctx.setLineDash([0, 0]);
-    //     ctx.beginPath();
-    //     ctx.moveTo(0, this.cv_height * (i + 1));
-    //     ctx.lineTo(this.cv_width, this.cv_height * (i + 1));
-    //     ctx.closePath();
-    //     ctx.stroke();
-    //     for (let j = 1; j <= 3; j++) {
-    //       //设置颜色
-    //       ctx.strokeStyle = lineColor;
-    //       //虚线
-    //       ctx.setLineDash([5, 3]);
-    //       ctx.beginPath();
-    //       ctx.moveTo(0, this.cv_height * (i + j * 0.25));
-    //       ctx.lineTo(this.cv_width, this.cv_height * (i + j * 0.25));
-    //       ctx.closePath();
-    //       ctx.stroke();
-    //     }
-    //   }
-    //   const arr12 = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'];
-    //   ctx.font = '12px Arial';
-    //   ctx.fillStyle = '#06f';
-    //   for (let i = 0; i < 12; i++) {
-    //     ctx.fillText(arr12[i], 10, this.cv_height * (i + 1) - 10);
-    //   }
-    //   // 应用所有绘图操作到canvas上
-    //   ctx.draw(true); // 清空画布并绘制新内容
-    // }
   }
 };
 </script>

@@ -1,5 +1,11 @@
 // src/utils/bleParser.js
-
+import {
+  updateEdaData
+} from '@/api/algorithm.js';
+import {
+  getCurrentTimeFormatted,
+  GUID
+} from '@/utils/comm.js';
 let buffer = [];
 let onDataCallback = null;
 // 在外部维护数据缓冲区
@@ -9,10 +15,16 @@ const PPG_BUFFER = {
   maxLength: 125 // 1秒数据（125Hz采样率）
 };
 
-export function setOnDataParsed(callback) {
-  onDataCallback = callback;
-}
+export function setOnDataParsed(callback, index) {
+  onDataCallback = null
+  if (index == 1) {
+    onDataCallback = callback;
+  } else {
+    onDataCallback = callback;
+  }
 
+}
+let gsrUpload = [];
 export function processIncomingData(data) {
   const uint8Array = new Uint8Array(data);
   buffer.push(...uint8Array);
@@ -36,6 +48,10 @@ export function processIncomingData(data) {
           } else if (dataType === 0x21 && buffer.length - i >= 29) {
             const gsrData = parseGSRData(buffer.slice(i, i + 29));
             if (onDataCallback) onDataCallback('gsr', gsrData);
+            gsrUpload.push(...gsrData.gsr);
+            if (gsrUpload.length % 100 == 0) {
+              uploadGsrData();
+            }
             buffer = buffer.slice(i + 29);
             foundHeader = true;
             break;
@@ -51,6 +67,37 @@ export function processIncomingData(data) {
     if (!foundHeader) break;
   }
 }
+
+function uploadGsrData() {
+  const dataToUpload = gsrUpload.slice(-100); // 取出最后100条数据
+  const obj = {
+    pId: GUID(),
+    eda: dataToUpload,
+    patientName: uni.getStorageSync('user').name || '测试人员',
+    gender: uni.getStorageSync('user').sex || '男',
+    age: uni.getStorageSync('user').age || 18,
+    patientPhone: uni.getStorageSync('user').tel || uni.getStorageSync('tel'),
+    patientCode: '411325200310186547',
+    deviceSn: uni.getStorageSync('pidian').name || 'MPPB20000069',
+    hospName: uni.getStorageSync('user').hospName || '测试医院',
+    samplingRate: 10,
+    recordDate: getCurrentTimeFormatted()
+  };
+  console.log('上传皮电数据', obj);
+  console.log('此时长度', gsrUpload.length);
+  // 调用上传函数
+  updateEdaData(obj)
+    .then((res) => {
+      console.log('上传皮电数据返回值');
+      console.log(res);
+      // 成功上传后，删除已上传的数据
+      gsrUpload = gsrUpload.slice(100); // 删除前100个已上传的数据
+    })
+    .catch((err) => {
+      console.error('上传失败:', err);
+      // 失败时不清空缓存，下次重试
+    });
+};
 
 function parsePPGData(bufferArray) {
   const view = new DataView(new Uint8Array(bufferArray).buffer);

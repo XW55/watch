@@ -122,20 +122,20 @@ export function startScanBluetooth() {
     });
   });
 }
-// 监听蓝牙连接状态变化
-uni.onBLEConnectionStateChange(res => {
-  console.log("连接状态变化:", res.connected);
-  if (res.connected) {
-    console.log("设备已连接，准备获取服务...");
-    setTimeout(() => {
-      handleBLEDeviceServices(res.deviceId); // 把 deviceId 传递给实际处理函数 
-    }, 2000)
+// // 监听蓝牙连接状态变化
+// uni.onBLEConnectionStateChange(res => {
+//   console.log("连接状态变化:", res.connected);
+//   if (res.connected) {
+//     console.log("设备已连接，准备获取服务...");
+//     setTimeout(() => {
+//       handleBLEDeviceServices(res.deviceId); // 把 deviceId 传递给实际处理函数 
+//     }, 2000)
 
-  } else {
-    console.warn("设备断开连接", res.deviceId);
-    store.commit('setble');
-  }
-});
+//   } else {
+//     console.warn("设备断开连接", res.deviceId);
+//     store.commit('setble');
+//   }
+// });
 
 let zijie = 1;
 

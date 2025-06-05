@@ -64,7 +64,7 @@ export class DrawEcg {
   }
 
   drawEcg(data) {
-    console.log('开始绘制新数据')
+    // console.log('开始绘制新数据')
     try {
       this.clearTimer()
       this.frameIndex = 0
@@ -113,7 +113,7 @@ export class DrawEcg {
       if (progress < 1) {
         this.animationFrameId = setTimeout(renderFrame, 4); // 使用setTimeout来模拟requestAnimationFrame
       } else {
-        console.log('本次绘制完成')
+        // console.log('本次绘制完成')
       }
     }
 
@@ -127,7 +127,7 @@ export class DrawEcg {
   }
 
   clearTimer() {
-    console.log('试图关闭定时器')
+    // console.log('试图关闭定时器')
     if (this.animationFrameId) {
       clearTimeout(this.animationFrameId)
       this.animationFrameId = null

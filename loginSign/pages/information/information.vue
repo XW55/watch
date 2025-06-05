@@ -503,6 +503,7 @@ export default {
     },
 
     getform1(tiem) {
+      let th = this;
       uni.hideLoading();
       register({
         userName: this.tel,
@@ -554,15 +555,10 @@ export default {
                   title: '注册成功',
                   icon: 'none'
                 });
-                if (this.youhui) {
-                  uni.navigateBack({
-                    delta: 2
-                  });
-                } else {
-                  uni.switchTab({
-                    url: '/pages/index/index'
-                  });
-                }
+
+                uni.switchTab({
+                  url: '/pages/index/index'
+                });
               }, 2000);
             }
           } else {
@@ -589,7 +585,9 @@ export default {
               hospName: res.data.data.hospital || '郑大',
               height: res.data.data.height,
               weight: res.data.data.weight,
-              age: th.calculateAgeRealTime(res.data.data.birthDay)
+              age: th.calculateAgeRealTime(res.data.data.birthDay),
+              livingHabit: res.data.data.livingHabit || '无',
+              m_data: res.data.data.m_data || '无'
             };
             th.setBarUser(user);
           }

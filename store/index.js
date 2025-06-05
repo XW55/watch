@@ -21,7 +21,8 @@ export default new Vuex.Store({
     deviceName: '',
     deviceSN: {},
     deviceVersion: '',
-
+    xindianble: null,
+    pidianble: null,
     bleConnectState: false,
     barUser: {
       name: '',
@@ -34,8 +35,6 @@ export default new Vuex.Store({
     },
 
     startCountingTime: null,
-    // 概率
-    gailvzhi: true,
   },
   // 相当于computed
   // getters: {
@@ -58,12 +57,21 @@ export default new Vuex.Store({
       console.log('vuex本地中得ble设备');
       console.log(uni.getStorageSync('ble'));
     },
+    SET_XINDIANBLE: (state, ble = '') => {
+      state.xindianble = ble;
+      uni.setStorageSync('xindian', ble);
+      console.log('vuex本地中得ble设备');
+      console.log(uni.getStorageSync('xindian'));
+    },
+    SET_PIDIANBLE: (state, ble = '') => {
+      state.pidianble = ble;
+      uni.setStorageSync('pidian', ble);
+      console.log('vuex本地中得ble设备');
+      console.log(uni.getStorageSync('pidian'));
+    },
     startCounting: (state, value) => {
       console.log('value111: ', value);
       state.startCountingTime = value;
-    },
-    setgailvzhi: (state, value) => {
-      state.gailvzhi = value;
     },
 
     SET_BAR_USER: (state, user) => {
@@ -75,6 +83,8 @@ export default new Vuex.Store({
         height: user.height,
         weight: user.weight,
         age: user.age,
+        livingHabit: user.livingHabit || '无',
+        m_data: user.m_data || '无'
       };
       console.log('vuex修改', state.barUser);
       uni.setStorageSync('user', user);

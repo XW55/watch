@@ -184,7 +184,7 @@ export default {
               uni.setStorageSync('tel', this.userPhone);
 
               if (res.data.BindingState) {
-                th.getpersonalInformation(uni.getStorageSync('tel'));
+                this.getpersonalInformation(uni.getStorageSync('tel'));
                 setTimeout(() => {
                   uni.switchTab({
                     url: '/pages/index/index'
@@ -217,7 +217,9 @@ export default {
               hospName: res.data.data.hospital || '郑大',
               height: res.data.data.height,
               weight: res.data.data.weight,
-              age: th.calculateAgeRealTime(res.data.data.birthDay)
+              age: th.calculateAgeRealTime(res.data.data.birthDay),
+              livingHabit: res.data.data.livingHabit || '无',
+              m_data: res.data.data.m_data || '无'
             };
             this.setBarUser(user);
           }

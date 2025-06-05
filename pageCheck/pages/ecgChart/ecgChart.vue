@@ -1,8 +1,6 @@
 <template>
   <view>
-    <view v-if="kaishihuatu" class="" @click="kaishi">开始</view>
-    <view v-else class="chartBox">
-      <view @click="kaishi" class="">返回</view>
+    <view class="chartBox">
       <view class="chartItem" v-for="(item, i) in 12" :key="i">
         <MyChart :option="options" :id="'ecgChart' + i"></MyChart>
       </view>
@@ -20,8 +18,7 @@ export default {
   data() {
     return {
       options: {},
-      ecgData,
-      kaishihuatu: true
+      ecgData
     };
   },
   mounted() {
@@ -29,11 +26,7 @@ export default {
     console.log(this.options);
   },
   onLoad() {},
-  methods: {
-    kaishi() {
-      this.kaishihuatu = !this.kaishihuatu;
-    }
-  }
+  methods: {}
 };
 </script>
 <style lang="scss" scoped>
