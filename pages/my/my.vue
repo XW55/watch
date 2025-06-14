@@ -263,11 +263,11 @@ page {
   /* font-weight: bold; */
   color: white;
   transition: background-color 0.3s ease;
-  border: 1px solid #4caf50;
+  // border: 1px solid #4caf50;
 }
 
 .edit-btn {
-  background-color: #4caf50;
+  background-color: #09cc9d;
 }
 
 .logout-btn {
