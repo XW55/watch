@@ -49,6 +49,12 @@ export function setOnDataParsed(callback, index) {
 
 }
 let gsrUpload = [];
+let guid = '';
+let shangchuan = false;
+export function kaishipidianshangchuan(zhi = false) {
+  shangchuan = zhi
+  zhi ? guid = GUID() : guid = ''
+}
 export function processIncomingData(data) {
   const uint8Array = new Uint8Array(data);
   buffer.push(...uint8Array);
@@ -92,7 +98,16 @@ export function processIncomingData(data) {
             const gsrData = parseGSRData(buffer.slice(i, i + 29));
             if (onDataCallback) onDataCallback('gsr', gsrData);
 
+
             GSR_BUFFER.push(...gsrData.gsr); // 推入缓冲区
+
+            // if (shangchuan) {
+            //   gsrUpload.push(...gsrData.gsr);
+            //   if (gsrUpload.length % 100 == 0) {
+            //     uploadGsrData();
+            //   }
+            // }
+
 
             buffer = buffer.slice(i + 29);
             foundHeader = true;
@@ -193,7 +208,7 @@ function clearBuffers() {
 function uploadGsrData() {
   const dataToUpload = gsrUpload.slice(-100); // 取出最后100条数据
   const obj = {
-    pId: GUID(),
+    pId: guid,
     eda: dataToUpload,
     patientName: uni.getStorageSync('user').name || '测试人员',
     gender: uni.getStorageSync('user').sex || '男',

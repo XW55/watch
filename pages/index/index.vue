@@ -31,7 +31,7 @@
       <view class="" style="padding: 25rpx">
         <view
           class=""
-          style="display: flex; justify-content: space-between; align-items: center"
+          style="display: flex; justify-content: space-between; align-items: center; margin: 20rpx 40rpx"
           @click="tiapzhuanpidian"
         >
           <view class="select-info-title-tips">皮电</view>
@@ -43,13 +43,24 @@
         <qiun-data-charts type="line" :opts="xyzOption" :chartData="chartData" />
       </view>
     </view>
+    <view class="bottom">
+      <view @click="kaishishagnchuan" v-if="xianshi" class="btnns edit-btn">开始上传数据</view>
+      <view @click="jieshushagnchuan" v-else class="btnns edit-hui">结束上传数据</view>
+    </view>
   </view>
 </template>
 
 <script>
 import { mapState, mapMutations } from 'vuex';
-import { setOnDataParseds, getqiehuan, setzhuyes, setfuyes, setkaishijieshou } from '@/utils/zongble.js';
-import { setOnDataParsed } from '@/utils/config.js'; // 注意路径可能需要调整
+import {
+  setOnDataParseds,
+  getqiehuan,
+  setzhuyes,
+  setfuyes,
+  setkaishijieshou,
+  shagnchuanshuju
+} from '@/utils/zongble.js';
+import { setOnDataParsed, kaishipidianshangchuan } from '@/utils/config.js'; // 注意路径可能需要调整
 import { DrawEcg } from '@/pageCheck/components/xindraw12.js';
 import { xyzOption } from '@/utils/echartsOption.js';
 import { updateEdaData } from '@/api/algorithm.js';
@@ -57,6 +68,7 @@ import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
 export default {
   data() {
     return {
+      xianshi: true,
       accIndex: 1, // 自增索引，用于模拟X轴标签
       xyzOption,
       chartData: {
@@ -130,6 +142,18 @@ export default {
       setxindianble: 'SET_XINDIANBLE',
       setpidianble: 'SET_PIDIANBLE'
     }),
+    kaishishagnchuan() {
+      console.log('开始上传');
+      this.xianshi = !this.xianshi;
+      kaishipidianshangchuan(true);
+      shagnchuanshuju(true);
+    },
+    jieshushagnchuan() {
+      this.xianshi = !this.xianshi;
+      kaishipidianshangchuan(false);
+      shagnchuanshuju(false);
+      console.log('结束上传');
+    },
     tiaozhuanlianjei() {
       if (!uni.getStorageSync('token')) {
         return uni.redirectTo({
@@ -196,6 +220,32 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.bottom {
+  width: 85%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btnns {
+  text-align: center;
+  padding: 30rpx 32rpx;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  /* font-weight: bold; */
+  color: white;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  // border: 1px solid #4caf50;
+}
+.edit-btn {
+  background-color: #09cc9d;
+}
+.edit-hui {
+  background-color: #f0f8ff;
+  color: #000;
+}
 .top {
   width: 95%;
   margin: 0 auto;
@@ -217,7 +267,7 @@ export default {
 //II导联CANCAS画图
 .hreat-box {
   width: 690rpx;
-  height: 544rpx;
+  // height: 544rpx;
 
   padding-top: 40rpx;
   margin: 0 auto;
@@ -247,7 +297,7 @@ export default {
   color: #666;
 }
 .info-cv {
-  height: 416rpx;
+  // height: 416rpx;
   width: 640rpx;
   margin-left: 24rpx;
   background-color: #f8f8f8;

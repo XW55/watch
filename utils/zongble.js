@@ -99,6 +99,11 @@ export function startBluetoothDeviceDiscoveryjs(deviceId) {
     }
   });
 }
+let shangchuan = false;
+export function shagnchuanshuju(zhi = false) {
+  shangchuan = zhi
+  zhi ? guid = GUID() : guid = ''
+}
 // 上传数据
 function uploadDataL_LTP(data) {
   // console.log('触发上传数据');
@@ -206,7 +211,7 @@ let guid = '';
 
 // 直接启用监听功能
 export function nowLinkLisjs(items, index, huidiao) {
-  guid = GUID();
+  // guid = GUID();
   let zhi = false;
   let data = '';
   let ecgData = [];
@@ -334,7 +339,9 @@ export function nowLinkLisjs(items, index, huidiao) {
                       V5 = V5.slice(5000);
                       V6 = V6.slice(5000);
                       // if (onDataCallback) onDataCallback(dataArys);
-                      uploadDataL_LTP(dataArys)
+                      if (shangchuan) {
+                        uploadDataL_LTP(dataArys)
+                      }
                     }
                     zijie++;
                     wanzhegnshuju.I = wanzhegnshuju.I.concat(resultdata[1]);
