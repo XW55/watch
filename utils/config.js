@@ -9,11 +9,35 @@ import {
 let buffer = [];
 let onDataCallback = null;
 // 在外部维护数据缓冲区
+// PPG 数据缓冲区
 const PPG_BUFFER = {
-  red: [],
-  infrared: [],
-  maxLength: 125 // 1秒数据（125Hz采样率）
+  red: [
+    [],
+    [],
+    [],
+    []
+  ], // 四个红光通道
+  infrared: [
+    [],
+    [],
+    [],
+    []
+  ], // 四个红外光通道
+  acc: {
+    x: [],
+    y: [],
+    z: []
+  }
 };
+
+// GSR 数据缓冲区
+let GSR_BUFFER = [];
+
+const PPG_SAMPLE_RATE = 125; // PPG采样率
+const GSR_SAMPLE_RATE = 10; // GSR采样率
+
+const PPG_UPLOAD_THRESHOLD = PPG_SAMPLE_RATE * 10; // 1250条
+const GSR_UPLOAD_THRESHOLD = GSR_SAMPLE_RATE * 10; // 100条
 
 export function setOnDataParsed(callback, index) {
   onDataCallback = null
@@ -41,19 +65,39 @@ export function processIncomingData(data) {
 
           if (dataType === 0x31 && buffer.length - i >= 177) {
             const ppgData = parsePPGData(buffer.slice(i, i + 177));
+
+            // ✅ 把解析后的数据写入缓冲区
+            for (let ch = 0; ch < 4; ch++) {
+              ppgData.red[ch].forEach(item => {
+                PPG_BUFFER.red[ch].push(item.value);
+              });
+
+              ppgData.infrared[ch].forEach(item => {
+                PPG_BUFFER.infrared[ch].push(item.value);
+              });
+            }
+
+            PPG_BUFFER.acc.x.push(ppgData.acc.x);
+            PPG_BUFFER.acc.y.push(ppgData.acc.y);
+            PPG_BUFFER.acc.z.push(ppgData.acc.z);
+
             if (onDataCallback) onDataCallback('ppg', ppgData);
+
             buffer = buffer.slice(i + 177);
             foundHeader = true;
+
+            checkAndUpload(); // 检查是否满足上传条件
             break;
           } else if (dataType === 0x21 && buffer.length - i >= 29) {
             const gsrData = parseGSRData(buffer.slice(i, i + 29));
             if (onDataCallback) onDataCallback('gsr', gsrData);
-            gsrUpload.push(...gsrData.gsr);
-            if (gsrUpload.length % 100 == 0) {
-              uploadGsrData();
-            }
+
+            GSR_BUFFER.push(...gsrData.gsr); // 推入缓冲区
+
             buffer = buffer.slice(i + 29);
             foundHeader = true;
+
+            checkAndUpload(); // 检查是否满足上传条件
             break;
           } else {
             buffer = buffer.slice(i + 1);
@@ -66,6 +110,84 @@ export function processIncomingData(data) {
     }
     if (!foundHeader) break;
   }
+}
+
+function checkAndUpload() {
+  const isPPGReady =
+    PPG_BUFFER.red.every(channel => channel.length === 0 || channel.length >= PPG_UPLOAD_THRESHOLD) &&
+    PPG_BUFFER.infrared.every(channel => channel.length === 0 || channel.length >= PPG_UPLOAD_THRESHOLD);
+
+  const isGSRReady = GSR_BUFFER.length >= GSR_UPLOAD_THRESHOLD;
+
+  if (isPPGReady && isGSRReady) {
+    uploadUnifiedData();
+  }
+}
+
+function uploadUnifiedData() {
+  const obj = {
+    pId: GUID(),
+    patientName: uni.getStorageSync('user')?.name || '测试人员',
+    gender: uni.getStorageSync('user')?.sex || '男',
+    age: uni.getStorageSync('user')?.age || 18,
+    patientPhone: uni.getStorageSync('user')?.tel || uni.getStorageSync('tel'),
+    patientCode: '411325200310186547',
+    deviceSn: uni.getStorageSync('pidian')?.name || 'MPPB20000069',
+    hospName: uni.getStorageSync('user')?.hospName || '测试医院',
+    // samplingRate: {
+    //   ppg: PPG_SAMPLE_RATE,
+    //   eda: GSR_SAMPLE_RATE
+    // },
+    samplingRate: 10,
+    recordDate: getCurrentTimeFormatted(),
+
+    acc: {
+      x: PPG_BUFFER.acc.x.slice(0, PPG_UPLOAD_THRESHOLD),
+      y: PPG_BUFFER.acc.y.slice(0, PPG_UPLOAD_THRESHOLD),
+      z: PPG_BUFFER.acc.z.slice(0, PPG_UPLOAD_THRESHOLD)
+    },
+    red: {
+      "0": PPG_BUFFER.red[0].slice(0, PPG_UPLOAD_THRESHOLD),
+      "1": PPG_BUFFER.red[1].slice(0, PPG_UPLOAD_THRESHOLD),
+      "2": PPG_BUFFER.red[2].slice(0, PPG_UPLOAD_THRESHOLD),
+      "3": PPG_BUFFER.red[3].slice(0, PPG_UPLOAD_THRESHOLD)
+    },
+    infrared: {
+      "0": PPG_BUFFER.infrared[0].slice(0, PPG_UPLOAD_THRESHOLD),
+      "1": PPG_BUFFER.infrared[1].slice(0, PPG_UPLOAD_THRESHOLD),
+      "2": PPG_BUFFER.infrared[2].slice(0, PPG_UPLOAD_THRESHOLD),
+      "3": PPG_BUFFER.infrared[3].slice(0, PPG_UPLOAD_THRESHOLD)
+    },
+
+    // 只上传前 100 条 GSR 数据
+    eda: GSR_BUFFER.slice(0, GSR_UPLOAD_THRESHOLD)
+  };
+
+  console.log('准备统一上传PPG+GSR数据:', obj);
+
+  updateEdaData(obj)
+    .then(res => {
+      console.log('统一上传成功', res);
+      clearBuffers(); // 清空已上传的数据
+    })
+    .catch(err => {
+      console.error('统一上传失败:', err);
+    });
+}
+
+function clearBuffers() {
+  // 清空 PPG 缓冲区中已上传的部分
+  for (let i = 0; i < 4; i++) {
+    PPG_BUFFER.red[i] = PPG_BUFFER.red[i].slice(PPG_UPLOAD_THRESHOLD);
+    PPG_BUFFER.infrared[i] = PPG_BUFFER.infrared[i].slice(PPG_UPLOAD_THRESHOLD);
+  }
+
+  PPG_BUFFER.acc.x = PPG_BUFFER.acc.x.slice(PPG_UPLOAD_THRESHOLD);
+  PPG_BUFFER.acc.y = PPG_BUFFER.acc.y.slice(PPG_UPLOAD_THRESHOLD);
+  PPG_BUFFER.acc.z = PPG_BUFFER.acc.z.slice(PPG_UPLOAD_THRESHOLD);
+
+  // 清空 GSR 缓冲区中已上传的部分
+  GSR_BUFFER = GSR_BUFFER.slice(GSR_UPLOAD_THRESHOLD);
 }
 
 function uploadGsrData() {
@@ -171,45 +293,6 @@ function parsePPGData(bufferArray) {
   parsedData.acc.x = view.getInt16(accelOffset, false) * 32 / 32768;
   parsedData.acc.y = view.getInt16(accelOffset + 2, false) * 32 / 32768;
   parsedData.acc.z = view.getInt16(accelOffset + 4, false) * 32 / 32768;
-
-  // 计算运动幅度 如果太大就不计算SpO2
-  // const movementMagnitude = Math.sqrt(parsedData.acc.x ** 2 + parsedData.acc.y ** 2 + parsedData.acc.z ** 2);
-  // console.log(movementMagnitude);
-  // // 阈值判断（假设阈值为 0.5 m/s²）
-  // const MAX_MOVEMENT_FOR_SPO2 = 3;
-  // if (movementMagnitude > MAX_MOVEMENT_FOR_SPO2) {
-  //   console.log("运动幅度过大，跳过 SpO2 计算");
-  // } else {
-  //   console.log("运动幅度正常，继续计算 SpO2");
-  // }
-
-  // const redSamples = extractValidSamples(parsedData.red);
-  // const irSamples = extractValidSamples(parsedData.infrared);
-  // const filteredRed = movingAverage(redSamples);
-  // const filteredIR = movingAverage(irSamples);
-  // const {
-  //   ac: acRed,
-  //   dc: dcRed
-  // } = calculateACDC(filteredRed);
-  // const {
-  //   ac: acIR,
-  //   dc: dcIR
-  // } = calculateACDC(filteredIR);
-
-  // // 计算AC/DC比值（取峰峰值）
-  // const ratioRed = (Math.max(...acRed) - Math.min(...acRed)) / dcRed[0];
-  // const ratioIR = (Math.max(...acIR) - Math.min(...acIR)) / dcIR[0];
-
-  // // 示例校准参数（需根据设备特性调整！）
-  // const CALIB_A = 110;
-  // const CALIB_B = 25;
-
-  // function calculateSpO2(ratioRed, ratioIR) {
-  //   const R = ratioRed / ratioIR;
-  //   return CALIB_A - CALIB_B * R; // 简化线性模型
-  // }
-  // const spo2 = calculateSpO2(ratioRed, ratioIR);
-  // console.log('血氧', spo2);
 
   return parsedData;
 }
