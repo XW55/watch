@@ -10,12 +10,23 @@
         <view class="wenzi">{{ pidianble ? pidianble.name : '无皮电设备连接' }}</view>
       </view>
     </view>
-    <view class="topwenzi">
+    <view class="loading" v-if="log && !(bleDevs.length > 0)">
+      <view class="loader">
+        <view class="orbe" style="--index: 0"></view>
+        <view class="orbe" style="--index: 1"></view>
+        <view class="orbe" style="--index: 2"></view>
+        <view class="orbe" style="--index: 3"></view>
+        <view class="orbe" style="--index: 4"></view>
+      </view>
+      <view class="" style="margin-top: 25rpx">正在搜索设备中...</view>
+    </view>
+
+    <view class="topwenzi" v-if="!log">
       <view class="">
         {{ bleDevs.length > 0 ? '我的设备' : '设备列表' }}
       </view>
     </view>
-    <scroll-view scroll-y="true" show-scrollbar="true" class="contentzhi">
+    <scroll-view scroll-y="true" show-scrollbar="true" class="contentzhi" v-if="!log">
       <view
         v-for="(item, index) in bleDevs"
         :key="index"
@@ -58,7 +69,9 @@
       </view>
     </scroll-view>
     <view class="sousuo">
-      <view class="anniu" v-show="!shows && !(deviceIds.length > 0)" @click="initBle">搜索</view>
+      <view :class="daojishi == 20 ? 'anniu' : 'huise'" v-show="!shows && !(deviceIds.length > 0)" @click="initBle">
+        搜索 {{ daojishi == 20 ? '' : daojishi + 's' }}
+      </view>
       <view @tap="connectBle" v-if="!shows && deviceIds.length > 0" class="anniu">连 接</view>
       <view @tap="close" v-if="shows" class="anniu">断 开</view>
     </view>
@@ -71,6 +84,9 @@ import { mapState, mapMutations } from 'vuex';
 export default {
   data() {
     return {
+      daojishi: 20,
+      daojishidengshiqi: null,
+      log: false,
       // 搜索到的设备
       bleDevs: [],
 
@@ -117,6 +133,7 @@ export default {
     if (this.xindianble) {
       this.totalList.push(this.xindianble);
       this.shows = true;
+      this.log = false;
     }
     // this.pidian = uni.getStorageSync('pidian');
     // console.log('皮电设备');
@@ -124,6 +141,7 @@ export default {
     if (this.pidianble) {
       this.totalList.push(this.pidianble);
       this.shows = true;
+      this.log = false;
     }
   },
   mounted() {
@@ -168,11 +186,24 @@ export default {
     },
     //初始化蓝牙
     initBle() {
+      if (this.daojishi !== 20) return;
+      if (this.daojishidengshiqi) {
+        clearInterval(this.daojishidengshiqi);
+      }
+      this.daojishidengshiqi = setInterval(() => {
+        this.daojishi--;
+        if (this.daojishi == 0) {
+          (this.log = false), clearInterval(this.daojishidengshiqi);
+          (this.daojishidengshiqi = null), (this.daojishi = 20);
+        }
+      }, 1000);
+      this.log = true;
       this.bleDevs = [];
       this.deviceIds = [];
       initBlejs((res) => {
         if (this.bleDevs.indexOf(res.devices[0]) == -1) {
           if (res.devices[0].name.startsWith('ZKMC') || res.devices[0].name.startsWith('MP')) {
+            this.log = false;
             this.bleDevs.push(res.devices[0]);
           }
         }
@@ -181,6 +212,7 @@ export default {
 
     // 多选然后连接
     connectBle() {
+      this.log = false;
       let th = this;
       if (this.deviceIds.length == 0) {
         uni.showToast({
@@ -255,6 +287,64 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+.huise {
+  background-color: #e6e6e8;
+  color: #8c8f98;
+}
+.loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+<style lang="scss" scoped>
+/* From Uiverse.io by krlozCJ */
+.loader {
+  --size-loader: 50px;
+  --size-orbe: 10px;
+  width: var(--size-loader);
+  height: var(--size-loader);
+  position: relative;
+  transform: rotate(45deg);
+}
+
+.orbe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  --delay: calc(var(--index) * 0.1s);
+  animation: orbit7456 ease-in-out 1.5s var(--delay) infinite;
+  opacity: calc(1 - calc(0.2 * var(--index)));
+}
+
+.orbe::after {
+  position: absolute;
+  content: '';
+  top: 0;
+  left: 0;
+  width: var(--size-orbe);
+  height: var(--size-orbe);
+  background-color: #3ae374;
+  box-shadow: 0px 0px 20px 2px #3ae374;
+  border-radius: 50%;
+}
+
+@keyframes orbit7456 {
+  0% {
+  }
+
+  80% {
+    transform: rotate(360deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
 <style lang="scss" scoped>
 .top {
   width: 95%;
@@ -516,6 +606,20 @@ page {
     color: #fff;
     font-size: 30rpx;
     padding: 20rpx 0;
+  }
+  .huise {
+    width: 93%;
+    margin: 0 auto;
+    background-color: #ff6c00;
+    border-radius: 40rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 30rpx;
+    padding: 20rpx 0;
+    background-color: #e6e6e8;
+    color: #8c8f98;
   }
 }
 </style>
