@@ -1,22 +1,22 @@
 <template>
-    <view style="width: 100%; height: 100%">
-        <!-- #ifdef APP-PLUS || H5 -->
-        <view class="echarts" :prop="option" :change:prop="echarts.updateEcharts" :id="id"></view>
-        <!-- #endif -->
-    </view>
+  <view style="width: 100%; height: 100%">
+    <!-- #ifdef APP-PLUS || H5 -->
+    <view class="echarts" :prop="option" :change:prop="echarts.updateEcharts" :id="id"></view>
+    <!-- #endif -->
+  </view>
 </template>
 
 <script>
 export default {
-    name: 'LineEcharts',
-    props: ['option', 'id'],
-    data() {
-        return {};
-    },
-    methods: {
-        // 动态改变配置数据
-        changeOption() {}
-    }
+  name: 'LineEcharts',
+  props: ['option', 'id'],
+  data() {
+    return {};
+  },
+  methods: {
+    // 动态改变配置数据
+    changeOption() {}
+  }
 };
 </script>
 
@@ -47,7 +47,7 @@ export default {
         // 监听配置数据变化，并重新渲染
         updateEcharts(newValue, oldValue, ownerInstance, instance) {
             if (this.myChart) {
-                this.myChart.clear();
+                // this.myChart.clear();
                 this.myChart.setOption(newValue);
             }
         },
@@ -57,7 +57,7 @@ export default {
 
 <style lang="scss" scoped>
 .echarts {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 </style>

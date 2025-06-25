@@ -60,13 +60,13 @@ export default new Vuex.Store({
     SET_XINDIANBLE: (state, ble = '') => {
       state.xindianble = ble;
       uni.setStorageSync('xindian', ble);
-      console.log('vuex本地中得ble设备');
+      console.log('vuex本地中得心电ble设备');
       console.log(uni.getStorageSync('xindian'));
     },
     SET_PIDIANBLE: (state, ble = '') => {
       state.pidianble = ble;
       uni.setStorageSync('pidian', ble);
-      console.log('vuex本地中得ble设备');
+      console.log('vuex本地中得皮电ble设备');
       console.log(uni.getStorageSync('pidian'));
     },
     startCounting: (state, value) => {

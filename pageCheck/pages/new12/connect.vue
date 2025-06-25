@@ -306,7 +306,7 @@ export default {
   },
   //离开当前页面
   onUnload() {
-    console.log('卸载了');
+    console.log('离开心电数据详情页面');
     setkaishijieshou(false);
     this.clearTimmer();
     // 取消获取表格数据

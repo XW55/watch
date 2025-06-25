@@ -63,13 +63,13 @@ export default {
         },
         yAxis: {
           gridType: 'dash',
-          splitNumber: 4,
-          data: [
-            {
-              min: 0,
-              max: 5
-            }
-          ]
+          splitNumber: 4
+          // data: [
+          //   {
+          //     min: 0,
+          //     max: 5
+          //   }
+          // ]
         },
         extra: {
           line: {
@@ -88,57 +88,18 @@ export default {
     // 注册回调，接收解析后的数据
     setOnDataParsed((type, data) => {
       if (type.toUpperCase() == 'GSR' && this.isLog) {
-        // console.log('皮电', data);
         gsrUpload.push(...data.gsr);
-        // console.log('长度', gsrUpload.length);
-        if (gsrUpload.length % 100 == 0) {
-          // this.uploadGsrData();
-        }
       } else {
         // console.log('红外', data);
       }
-      // console.log(`收到 ${type.toUpperCase()} 数据`, data);
-      // this.bleData = data;
+
       this.updateChartData(data);
     }, 2);
   },
   onUnload() {
-    // console.log('3333333333333333333333333333333333333');
-    // setkaishijieshou(false);
+    console.log('离开皮电数据详情页面');
   },
   methods: {
-    uploadGsrData() {
-      const dataToUpload = gsrUpload.slice(-100); // 取出最后100条数据
-      console.log('10s上传皮电', dataToUpload);
-      const obj = {
-        pId: GUID(),
-        eda: dataToUpload,
-        patientName: '姓名',
-        gender: '男',
-        age: 20,
-        patientPhone: '15360544778',
-        patientCode: '411325200310186547',
-
-        hospName: '医院名称',
-        samplingRate: 10,
-        recordDate: getCurrentTimeFormatted()
-      };
-      console.log('上传的数据', obj);
-      console.log('此时长度', gsrUpload.length);
-
-      // 调用上传函数
-      updateEdaData(obj)
-        .then((res) => {
-          console.log(res);
-          // 成功上传后，删除已上传的数据
-          gsrUpload = gsrUpload.slice(100); // 删除前100个已上传的数据
-        })
-        .catch((err) => {
-          console.error('上传失败:', err);
-          // 失败时不清空缓存，下次重试
-        });
-    },
-
     updateChartData(data) {
       // console.log('答应');
       if (data.acc) {

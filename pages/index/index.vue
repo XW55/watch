@@ -40,6 +40,9 @@
             <u-icon name="arrow-right"></u-icon>
           </view>
         </view>
+        <view style="width: 100%; height: 500rpx">
+          <lechartt ref="chart"></lechartt>
+        </view>
         <qiun-data-charts type="line" :opts="xyzOption" :chartData="chartData" />
       </view>
     </view>
@@ -51,6 +54,8 @@
 </template>
 
 <script>
+import lechartt from '@/uni_modules/lime-echart/components/l-echart/l-echart.vue';
+import * as echarts from '@/uni_modules/lime-echart/components/l-echart/echarts.min4.9.js';
 import { mapState, mapMutations } from 'vuex';
 import {
   setOnDataParseds,
@@ -65,7 +70,11 @@ import { DrawEcg } from '@/pageCheck/components/xindraw12.js';
 import { xyzOption } from '@/utils/echartsOption.js';
 import { updateEdaData } from '@/api/algorithm.js';
 import { getCurrentTimeFormatted, GUID } from '@/utils/comm.js';
+// let chartInstane = null;
 export default {
+  components: {
+    lechartt
+  },
   data() {
     return {
       xianshi: true,
@@ -84,7 +93,8 @@ export default {
       ctxFig: null,
       cveObj: null,
       ecgType: 'DECG12SX',
-      ecgShowLead: 'II'
+      ecgShowLead: 'II',
+      chartInstane: null
     };
   },
   watch: {
@@ -114,6 +124,7 @@ export default {
     }
   },
   mounted() {
+    this.initChart();
     // II导联
     this.ctxFig = uni.createCanvasContext('cvs-fig');
     this.cveObj = new DrawEcg(this.ctxFig, 640, 328, this.ecgType, this.ecgShowLead);
@@ -142,6 +153,101 @@ export default {
       setxindianble: 'SET_XINDIANBLE',
       setpidianble: 'SET_PIDIANBLE'
     }),
+    initChart() {
+      const initOption = {
+        animation: true, // 开启动画
+        animationDuration: 0, // duration: 0 关闭动画过渡
+        // grid: {
+        // width: '100%',
+        // height: '80%',
+        // containLabel: true
+        // },
+        // tooltip: {
+        //   trigger: "axis",
+        // },
+        // legend: {
+        //   left: 20,
+        //   top: "15%",
+        //   icon: "circle",
+        // },
+        color: ['#1890FF', '#91CB74', '#FAC858'], // 主题色
+        legend: {
+          data: ['X', 'Y', 'Z']
+        },
+        xAxis: {
+          type: 'time' // 类别轴，适用于字符串类的 X 轴数据
+          // data: [], // 初始为空数组，后续动态传
+          // splitLine: {
+          //   show: false,
+          //   lineStyle: {
+          //     //坐标轴以及刻度线颜色
+          //     color: '#ccc'
+          //   }
+          // }, // 不显示网格线
+          // axisLine: {
+          //   lineStyle: {
+          //     //坐标轴以及刻度线颜色
+          //     color: '#ccc'
+          //   }
+          // },
+          // axisLabel: {
+          //   show: false
+          // },
+          // axisTick: {
+          //   show: false
+          // },
+          // boundaryGap: false
+        },
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: {
+              //坐标轴以及刻度线颜色
+              color: '#ccc'
+            }
+          },
+          type: 'value',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed', // 网格线为虚线
+              width: 2, // 线宽为 2px
+              color: '#ccc' // 线条颜色为灰色
+            }
+          },
+          splitNumber: 5,
+          axisLabel: {
+            formatter: (value) => value.toFixed(0) // 格式化显示为小数点后三位
+          }
+        },
+        series: [
+          {
+            name: 'X',
+            data: [],
+            type: 'line',
+            symbol: 'none',
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2 },
+            color: '#1890FF'
+          },
+          {
+            name: 'Y',
+            data: [],
+            type: 'line',
+            symbol: 'none',
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2 },
+            color: '#91CB74'
+          },
+          { name: 'Z', data: [], type: 'line', symbol: 'none', smooth: true, color: '#FAC858' }
+        ]
+      };
+      this.$refs.chart.init(echarts, (chartInstance) => {
+        this.chartInstane = chartInstance;
+        this.chartInstane.setOption(initOption);
+      });
+    },
     kaishishagnchuan() {
       console.log('开始上传');
       this.xianshi = !this.xianshi;
@@ -210,7 +316,18 @@ export default {
           this.chartData.categories.shift();
           this.chartData.series.forEach((s) => s.data.shift());
         }
+        // console.log(this.chartData.categories);
+        // console.log(this.chartData.series[0]);
+        // console.log(this.chartData.series[1]);
+        // console.log(this.chartData.series[2]);
+        this.chartInstane.setOption({
+          // xAxis: {
+          //   data: this.chartData.categories
+          // },
+          series: this.chartData.series
+        });
       }
+
       if (this.accIndex >= 10) {
         this.accIndex = 1;
       }

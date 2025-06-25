@@ -46,7 +46,6 @@ export function setOnDataParsed(callback, index) {
   } else {
     onDataCallback = callback;
   }
-
 }
 let gsrUpload = [];
 let guid = '';
@@ -68,51 +67,37 @@ export function processIncomingData(data) {
       ) {
         try {
           const dataType = buffer[i + 8];
-
           if (dataType === 0x31 && buffer.length - i >= 177) {
             const ppgData = parsePPGData(buffer.slice(i, i + 177));
-
-            // ✅ 把解析后的数据写入缓冲区
-            for (let ch = 0; ch < 4; ch++) {
-              ppgData.red[ch].forEach(item => {
-                PPG_BUFFER.red[ch].push(item.value);
-              });
-
-              ppgData.infrared[ch].forEach(item => {
-                PPG_BUFFER.infrared[ch].push(item.value);
-              });
-            }
-
-            PPG_BUFFER.acc.x.push(ppgData.acc.x);
-            PPG_BUFFER.acc.y.push(ppgData.acc.y);
-            PPG_BUFFER.acc.z.push(ppgData.acc.z);
-
             if (onDataCallback) onDataCallback('ppg', ppgData);
-
+            if (shangchuan) {
+              // ✅ 把解析后的数据写入缓冲区
+              for (let ch = 0; ch < 4; ch++) {
+                ppgData.red[ch].forEach(item => {
+                  PPG_BUFFER.red[ch].push(item.value);
+                });
+                ppgData.infrared[ch].forEach(item => {
+                  PPG_BUFFER.infrared[ch].push(item.value);
+                });
+              }
+              PPG_BUFFER.acc.x.push(ppgData.acc.x);
+              PPG_BUFFER.acc.y.push(ppgData.acc.y);
+              PPG_BUFFER.acc.z.push(ppgData.acc.z);
+              checkAndUpload(); // 检查是否满足上传条件
+            }
             buffer = buffer.slice(i + 177);
             foundHeader = true;
-
-            checkAndUpload(); // 检查是否满足上传条件
             break;
           } else if (dataType === 0x21 && buffer.length - i >= 29) {
             const gsrData = parseGSRData(buffer.slice(i, i + 29));
             if (onDataCallback) onDataCallback('gsr', gsrData);
 
-
-            GSR_BUFFER.push(...gsrData.gsr); // 推入缓冲区
-
-            // if (shangchuan) {
-            //   gsrUpload.push(...gsrData.gsr);
-            //   if (gsrUpload.length % 100 == 0) {
-            //     uploadGsrData();
-            //   }
-            // }
-
-
+            if (shangchuan) {
+              GSR_BUFFER.push(...gsrData.gsr); // 推入缓冲区
+              checkAndUpload(); // 检查是否满足上传条件
+            }
             buffer = buffer.slice(i + 29);
             foundHeader = true;
-
-            checkAndUpload(); // 检查是否满足上传条件
             break;
           } else {
             buffer = buffer.slice(i + 1);
@@ -141,12 +126,12 @@ function checkAndUpload() {
 
 function uploadUnifiedData() {
   const obj = {
-    pId: GUID(),
+    pId: guid,
     patientName: uni.getStorageSync('user')?.name || '测试人员',
     gender: uni.getStorageSync('user')?.sex || '男',
     age: uni.getStorageSync('user')?.age || 18,
     patientPhone: uni.getStorageSync('user')?.tel || uni.getStorageSync('tel'),
-    patientCode: '411325200310186547',
+    patientCode: uni.getStorageSync('tel'),
     deviceSn: uni.getStorageSync('pidian')?.name || 'MPPB20000069',
     hospName: uni.getStorageSync('user')?.hospName || '测试医院',
     // samplingRate: {

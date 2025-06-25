@@ -1,3 +1,4 @@
+import vueStore from '@/store/index.js';
 // 唯里滤波
 import filterUtils from '@/pageCheck/components/new12daojisuan.js';
 import {
@@ -176,16 +177,66 @@ export function onBluetoothDeviceFound() {
     sousuodaodeshebei(res)
   });
 }
+let xindiandingshiqi = null;
+let xindianshijian = 1000;
+let xindiancishu = 0;
+let pidiandingshiqi = null;
+let pidianshijian = 2000;
+let pidiancishu = 0;
 let setzhuye = null;
 // 监听蓝牙连接状态变化
-// uni.onBLEConnectionStateChange(res => {
-//   console.log('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\');
-//   console.log(res);
-//   console.log("连接状态变化:", res.connected);
-//   if (res.connected) {} else {
-//     console.warn("设备断开连接", res.deviceId);
-//   }
-// });
+uni.onBLEConnectionStateChange(res => {
+  if (!res.connected) {
+    console.warn("设备断开连接", res.deviceId);
+    console.warn('\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\');
+    console.warn(res);
+    if (uni.getStorageSync('xindian')?.deviceId == res.deviceId && !res.connected) {
+      if (xindiandingshiqi) {
+        clearInterval(xindiandingshiqi)
+        xindiandingshiqi = null
+      }
+      xindiandingshiqi = setInterval(() => {
+        nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
+          console.log('心电电设备重连');
+          if (xindiancishu == 5) {
+            clearInterval(xindiandingshiqi)
+            xindiancishu = 0;
+            vueStore.commit('SET_XINDIANBLE', '');
+            uni.showToast({
+              title: '心电设备重连失败',
+              icon: 'error',
+              duration: 2000
+            });
+          } else {
+            xindiancishu++
+          }
+        });
+      }, xindianshijian)
+    } else if (uni.getStorageSync('pidian')?.deviceId == res.deviceId && !res.connected) {
+      if (pidiandingshiqi) {
+        clearInterval(pidiandingshiqi)
+        pidiandingshiqi = null
+      }
+      pidiandingshiqi = setInterval(() => {
+        nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
+          console.log('皮电设备重连');
+          if (pidiancishu == 5) {
+            clearInterval(pidiandingshiqi)
+            pidiancishu = 0;
+            vueStore.commit('SET_PIDIANBLE', '');
+            uni.showToast({
+              title: '皮电设备重连失败',
+              icon: 'error',
+              duration: 2000
+            });
+          } else {
+            pidiancishu++
+          }
+        });
+      }, pidianshijian)
+    }
+  }
+});
 export function setzhuyes(callback, index) {
   // console.log('-----------------------------------------');
   // console.log(index);
@@ -262,6 +313,16 @@ export function nowLinkLisjs(items, index, huidiao) {
             '6e4000f3-b5a3-f393-e0a9-e50e24dcca9e' : '6E400003-B5A3-F393-E0A9-E50E24DCCA9E',
           success: (res) => {
             // console.log('启用监听了', res);
+            if (pidiandingshiqi) {
+              clearInterval(pidiandingshiqi)
+              pidiandingshiqi = null
+              pidiancishu = 0;
+            }
+            if (xindiandingshiqi) {
+              clearInterval(xindiandingshiqi)
+              xindiandingshiqi = null
+              xindiancishu = 0;
+            }
             uni.hideLoading();
             uni.onBLECharacteristicValueChange((res) => {
               // console.log('-------------');
