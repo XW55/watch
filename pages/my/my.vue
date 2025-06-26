@@ -40,6 +40,8 @@
       </view>
     </view>
 
+    <button @click="connect">链接脑电</button>
+
     <!-- 操作按钮 -->
     <view class="action-buttons" v-if="zhi">
       <view class="btn logout-btn" @click="tiaozhuann">退出登录</view>
@@ -50,6 +52,7 @@
 <script>
 import { getUserInfo, phoneLogin, getVerifyCode } from '@/api/loginSign/index.js';
 import { mapMutations } from 'vuex';
+const testModule = uni.requireNativePlugin('libmuse_android');
 export default {
   data() {
     return {
@@ -80,6 +83,9 @@ export default {
     ...mapMutations({
       setBarUser: 'SET_BAR_USER'
     }),
+    connect() {
+      console.log('jar包', JSON.stringify(testModule));
+    },
     getpersonalInformation(tel) {
       let th = this;
       getUserInfo(tel)

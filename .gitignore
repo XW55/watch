@@ -14,3 +14,9 @@ unpackage/dist/dev/
 
 # python
 *.pyc
+
+unpackage
+.idea
+node_modules
+/.hbuilderx/
+
