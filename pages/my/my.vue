@@ -59,8 +59,8 @@ export default {
       zhi: false,
       userInfo: {
         name: '',
-        height: '无',
-        weight: '无',
+        height: '--',
+        weight: '--',
         m_data: '无',
         livingHabit: '无'
       }
