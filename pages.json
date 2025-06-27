@@ -4,6 +4,12 @@
   },
 
   "pages": [{
+      "path": "pages/index/index2",
+      "style": {
+        "navigationBarTitleText": "筛查"
+      }
+    },
+    {
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页"
@@ -26,7 +32,14 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/tianxiexinxi/tianxiexinxi",
+      "style": {
+        "navigationBarTitleText": "填写信息"
+      }
     }
+
     // {
     //   "path": "pages/demos/demos",
     //   "style": {
@@ -113,11 +126,17 @@
     "color": "#999999", // 未选中时的文字颜色
     "selectedColor": "#FF0000", // 选中时的颜色
     "list": [{
+        "pagePath": "pages/index/index2",
+        "text": "筛查"
+        // "iconPath": "static/tabs/home.png", // 本地图片路径（非绝对路径）
+        // "selectedIconPath": "static/tabs/home_active.png"
+      }, {
         "pagePath": "pages/index/index",
         "text": "首页"
         // "iconPath": "static/tabs/home.png", // 本地图片路径（非绝对路径）
         // "selectedIconPath": "static/tabs/home_active.png"
       },
+
       // {
       // "pagePath": "pages/demo/demo",
       // "text": "示例"

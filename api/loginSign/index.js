@@ -32,6 +32,19 @@ export const phoneLogin = (data) => {
     auth: false
   });
 }
+// 无感登录
+export const wugandenglu = () => {
+  return request({
+    url: `/login`,
+    method: "POST",
+    data: {
+      username: 'appSignalCollect',
+      password: 'SC@2025app..'
+    }
+  }, {
+    auth: false
+  });
+}
 // app 端获取验证码
 export const getVerifyCode = (data) => {
   return request({
@@ -95,6 +108,15 @@ export const register = (data) => {
     data
   });
 }
+// 注册用户
+export const eegPatientAdd = (data) => {
+  return request({
+    url: `/patient/patient/eegPatientAdd`,
+    method: "POST",
+    data
+  });
+}
+
 // 是否参与了万人筛查
 export const isJoin = (data) => {
   return request({

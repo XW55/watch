@@ -40,9 +40,9 @@
             <u-icon name="arrow-right"></u-icon>
           </view>
         </view>
-        <view style="width: 100%; height: 500rpx">
+        <!--    <view style="width: 100%; height: 500rpx">
           <lechartt ref="chart"></lechartt>
-        </view>
+        </view> -->
         <qiun-data-charts type="line" :opts="xyzOption" :chartData="chartData" />
       </view>
     </view>
@@ -63,8 +63,9 @@ import {
   setzhuyes,
   setfuyes,
   setkaishijieshou,
-  shagnchuanshuju
-} from '@/utils/zongble.js';
+  shagnchuanshuju,
+  xindianacc
+} from '@/utils/zongble2.js';
 import { setOnDataParsed, kaishipidianshangchuan } from '@/utils/config.js'; // 注意路径可能需要调整
 import { DrawEcg } from '@/pageCheck/components/xindraw12.js';
 import { xyzOption } from '@/utils/echartsOption.js';
@@ -124,7 +125,7 @@ export default {
     }
   },
   mounted() {
-    this.initChart();
+    // this.initChart();
     // II导联
     this.ctxFig = uni.createCanvasContext('cvs-fig');
     this.cveObj = new DrawEcg(this.ctxFig, 640, 328, this.ecgType, this.ecgShowLead);
@@ -140,6 +141,9 @@ export default {
     // 注册回调，接收解析后的数据
     setOnDataParsed((type, data) => {
       this.updateChartData(data);
+    }, 1);
+    xindianacc((type, data) => {
+      this.updateChartDatas(data);
     }, 1);
     setzhuyes((data) => {
       if (data) {
@@ -306,7 +310,35 @@ export default {
         });
       }
     },
+    updateChartDatas(data) {
+      // console.log(data);
+      if (data.acc) {
+        this.chartData.categories.push(++this.accIndex);
+        this.chartData.series[0].data.push(...data.acc.x_g); // X轴
+        this.chartData.series[1].data.push(...data.acc.y_g); // Y轴
+        this.chartData.series[2].data.push(...data.acc.z_g); // Z轴
+        if (this.chartData.categories.length > 50) {
+          this.chartData.categories.shift();
+          this.chartData.series.forEach((s) => s.data.shift());
+        }
+        // console.log(this.chartData.categories);
+        // console.log(this.chartData.series[0]);
+        // console.log(this.chartData.series[1]);
+        // console.log(this.chartData.series[2]);
+        this.chartInstane.setOption({
+          xAxis: {
+            data: this.chartData.categories
+          },
+          series: this.chartData.series
+        });
+      }
+
+      if (this.accIndex >= 10) {
+        this.accIndex = 1;
+      }
+    },
     updateChartData(data) {
+      console.log(data);
       if (data.acc) {
         this.chartData.categories.push(++this.accIndex);
         this.chartData.series[0].data.push(data.acc.x); // X轴

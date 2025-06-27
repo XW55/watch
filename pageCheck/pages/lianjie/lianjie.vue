@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { initBlejs, nowLinkLisjs } from '@/utils/zongble.js';
+import { initBlejs, nowLinkLisjs } from '@/utils/zongble2.js';
 import { mapState, mapMutations } from 'vuex';
 export default {
   data() {
@@ -202,7 +202,7 @@ export default {
       this.deviceIds = [];
       initBlejs((res) => {
         if (this.bleDevs.indexOf(res.devices[0]) == -1) {
-          if (res.devices[0].name.startsWith('ZKMC') || res.devices[0].name.startsWith('MP')) {
+          if (res.devices[0].name.startsWith('KY') || res.devices[0].name.startsWith('MP')) {
             this.log = false;
             this.bleDevs.push(res.devices[0]);
           }
@@ -229,7 +229,7 @@ export default {
             item.lianjie = true;
             th.totalList.push(item);
             console.log('连接设备存入本地');
-            if (item.name.startsWith('ZKMC')) {
+            if (item.name.startsWith('KY')) {
               th.setxindianble(item);
             } else if (item.name.startsWith('MP')) {
               th.setpidianble(item);
@@ -262,7 +262,7 @@ export default {
                   if (item.name.startsWith('MP')) {
                     that.setpidianble('');
                     console.log('皮电断开蓝牙成功', res);
-                  } else if (item.name.startsWith('ZKMC')) {
+                  } else if (item.name.startsWith('KY')) {
                     that.setxindianble('');
                     console.log('心电断开蓝牙成功', res);
                   }
