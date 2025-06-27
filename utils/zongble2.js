@@ -175,32 +175,10 @@ uni.onBLEConnectionStateChange(res => {
     if (uni.getStorageSync('xindian')?.deviceId == res.deviceId && !res.connected) {
       nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
         console.log('心电电设备重连');
-        if (xindiancishu == 5) {
-          xindiancishu = 0;
-          vueStore.commit('SET_XINDIANBLE', '');
-          uni.showToast({
-            title: '心电设备重连失败',
-            icon: 'error',
-            duration: 2000
-          });
-        } else {
-          xindiancishu++
-        }
       });
     } else if (uni.getStorageSync('pidian')?.deviceId == res.deviceId && !res.connected) {
       nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
         console.log('皮电设备重连');
-        if (pidiancishu == 5) {
-          pidiancishu = 0;
-          vueStore.commit('SET_PIDIANBLE', '');
-          uni.showToast({
-            title: '皮电设备重连失败',
-            icon: 'error',
-            duration: 2000
-          });
-        } else {
-          pidiancishu++
-        }
       });
     }
   }
@@ -278,6 +256,38 @@ export function nowLinkLisjs(items, index, huidiao) {
       }, 1000 * (index + 1));
     },
     fail(res) {
+      if (uni.getStorageSync('xindian')?.deviceId == items.deviceId) {
+        nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
+          console.log('心电电设备重连');
+          if (xindiancishu == 3) {
+            xindiancishu = 0;
+            vueStore.commit('SET_XINDIANBLE', '');
+            uni.showToast({
+              title: '心电设备重连失败',
+              icon: 'error',
+              duration: 2000
+            });
+          } else {
+            xindiancishu++
+          }
+        });
+      } else if (uni.getStorageSync('pidian')?.deviceId == items.deviceId) {
+        nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
+          console.log('皮电设备重连');
+          if (pidiancishu == 3) {
+            pidiancishu = 0;
+            vueStore.commit('SET_PIDIANBLE', '');
+            uni.showToast({
+              title: '皮电设备重连失败',
+              icon: 'error',
+              duration: 2000
+            });
+          } else {
+            pidiancishu++
+          }
+        });
+      }
+      uni.hideLoading();
       console.log('蓝牙连接失败', res);
       uni.showToast({
         title: items.name + '连接失败',
