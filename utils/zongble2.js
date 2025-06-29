@@ -12,7 +12,11 @@ import {
 import {
   ecgConfig
 } from '@/utils/ecgChart.js';
-
+// 回调函数
+let bledata = null
+export function getdata(deviceId) {
+  bledata = deviceId
+}
 
 /**
  * 例子
@@ -174,11 +178,11 @@ uni.onBLEConnectionStateChange(res => {
     console.warn(res);
     if (uni.getStorageSync('xindian')?.deviceId == res.deviceId && !res.connected) {
       nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
-        console.log('心电电设备重连');
+        console.log('心电电设备重连1');
       });
     } else if (uni.getStorageSync('pidian')?.deviceId == res.deviceId && !res.connected) {
       nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
-        console.log('皮电设备重连');
+        console.log('皮电设备重连1');
       });
     }
   }
@@ -217,6 +221,7 @@ export function nowLinkLisjs(items, index, huidiao) {
   uni.createBLEConnection({
     deviceId: items.deviceId,
     success(res) {
+      console.log('777777');
       stopBluetoothDevicesDiscovery(); // 停止搜索蓝牙
       huidiao()
       setTimeout(() => {
@@ -237,8 +242,10 @@ export function nowLinkLisjs(items, index, huidiao) {
               // console.log(kaishijieshou);
               // if (kaishijieshou) {
               if (res.serviceId == 'DE5BF728-D711-4E47-AF26-65E3012A5DC7') {
+                xindiancishu = 0;
                 xindiantiejiaxishuju(res.value)
               } else if (res.serviceId == '6E4000F1-B5A3-F393-E0A9-E50E24DCCA9E') {
+                pidiancishu = 0;
                 processIncomingData(res.value)
               }
               // }
@@ -251,48 +258,59 @@ export function nowLinkLisjs(items, index, huidiao) {
               title: '连接失败',
               icon: 'none'
             });
+          },
+          complete: (res) => {
+            console.log('complete1');
+            console.log(res);
+            uni.hideLoading();
           }
         });
       }, 1000 * (index + 1));
     },
     fail(res) {
+      console.log(res);
       if (uni.getStorageSync('xindian')?.deviceId == items.deviceId) {
-        nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
-          console.log('心电电设备重连');
-          if (xindiancishu == 3) {
-            xindiancishu = 0;
-            vueStore.commit('SET_XINDIANBLE', '');
-            uni.showToast({
-              title: '心电设备重连失败',
-              icon: 'error',
-              duration: 2000
-            });
-          } else {
-            xindiancishu++
-          }
-        });
+        console.log('心电重连3');
+        console.log(xindiancishu);
+        if (xindiancishu == 3) {
+          vueStore.commit('SET_XINDIANBLE', '');
+          uni.hideLoading();
+          console.log('蓝牙连接失败', res);
+          uni.showToast({
+            title: items.name + '连接失败',
+            icon: 'none'
+          });
+          xindiancishu = 0;
+        } else {
+          xindiancishu++
+          nowLinkLisjs(uni.getStorageSync('xindian'), 1, () => {
+            console.log('心电电设备重连2');
+          });
+        }
       } else if (uni.getStorageSync('pidian')?.deviceId == items.deviceId) {
-        nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
-          console.log('皮电设备重连');
-          if (pidiancishu == 3) {
-            pidiancishu = 0;
-            vueStore.commit('SET_PIDIANBLE', '');
-            uni.showToast({
-              title: '皮电设备重连失败',
-              icon: 'error',
-              duration: 2000
-            });
-          } else {
-            pidiancishu++
-          }
-        });
+        console.log('皮电重连3');
+        console.log(pidiancishu);
+        if (pidiancishu == 3) {
+          vueStore.commit('SET_PIDIANBLE', '');
+          uni.hideLoading();
+          console.log('蓝牙连接失败', res);
+          uni.showToast({
+            title: items.name + '连接失败',
+            icon: 'none'
+          });
+          pidiancishu = 0;
+        } else {
+          pidiancishu++
+          nowLinkLisjs(uni.getStorageSync('pidian'), 1, () => {
+            console.log('皮电设备重连2');
+          });
+        }
       }
+    },
+    complete: (res) => {
+      console.log('complete2');
+      console.log(res);
       uni.hideLoading();
-      console.log('蓝牙连接失败', res);
-      uni.showToast({
-        title: items.name + '连接失败',
-        icon: 'none'
-      });
     }
   });
 }
@@ -555,25 +573,25 @@ function parseAccData(data) {
   // console.log(datazhi[0]);
   // console.log(datazhi[1]);
   // 从索引8开始解析（跳过前8字节非加速度数据）
-  for (let i = 0; i <= datazhi.length - 6; i += 6) {
-    // 解析x轴：先组合为16位无符号数，再转换为有符号数
-    const xRaw16 = ((datazhi[i] << 8) | datazhi[i + 1]) & 0xFFFF;
-    const xRaw = xRaw16 >= 0x8000 ? xRaw16 - 0x10000 : xRaw16;
-    result.acc.x.push(xRaw);
-    result.acc.x_g.push(xRaw / 2048);
+  // for (let i = 0; i <= datazhi.length - 6; i += 6) {
+  //   // 解析x轴：先组合为16位无符号数，再转换为有符号数
+  //   const xRaw16 = ((datazhi[i] << 8) | datazhi[i + 1]) & 0xFFFF;
+  //   const xRaw = xRaw16 >= 0x8000 ? xRaw16 - 0x10000 : xRaw16;
+  //   result.acc.x.push(xRaw);
+  //   result.acc.x_g.push(xRaw / 2048);
 
-    // 解析y轴
-    const yRaw16 = ((datazhi[i + 2] << 8) | datazhi[i + 3]) & 0xFFFF;
-    const yRaw = yRaw16 >= 0x8000 ? yRaw16 - 0x10000 : yRaw16;
-    result.acc.y.push(yRaw);
-    result.acc.y_g.push(yRaw / 2048);
+  //   // 解析y轴
+  //   const yRaw16 = ((datazhi[i + 2] << 8) | datazhi[i + 3]) & 0xFFFF;
+  //   const yRaw = yRaw16 >= 0x8000 ? yRaw16 - 0x10000 : yRaw16;
+  //   result.acc.y.push(yRaw);
+  //   result.acc.y_g.push(yRaw / 2048);
 
-    // 解析z轴
-    const zRaw16 = ((datazhi[i + 4] << 8) | datazhi[i + 5]) & 0xFFFF;
-    const zRaw = zRaw16 >= 0x8000 ? zRaw16 - 0x10000 : zRaw16;
-    result.acc.z.push(zRaw);
-    result.acc.z_g.push(zRaw / 2048);
-  }
+  //   // 解析z轴
+  //   const zRaw16 = ((datazhi[i + 4] << 8) | datazhi[i + 5]) & 0xFFFF;
+  //   const zRaw = zRaw16 >= 0x8000 ? zRaw16 - 0x10000 : zRaw16;
+  //   result.acc.z.push(zRaw);
+  //   result.acc.z_g.push(zRaw / 2048);
+  // }
   // for (let i = 0; i <= datazhi.length - 6; i += 6) {
   //   // 解析x轴：先组合为16位无符号数，再转换为有符号数
   //   const xRaw16 = datazhi[i + 1].toString(2).padStart(8, '0') + datazhi[i].toString(2).padStart(8, '0');
@@ -613,6 +631,26 @@ function parseAccData(data) {
   //   result.acc.z.push(zRaw ? parseInt(zRaw16, 2) * -1 : parseInt(zRaw16, 2));
   //   result.acc.z_g.push(zRaw ? parseInt(zRaw16, 2) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
   // }
+
+  for (let i = 0; i <= datazhi.length - 6; i += 6) {
+    // 解析x轴：先组合为16位无符号数，再转换为有符号数
+    const xRaw16 = datazhi[i].toString(2).padStart(8, '0') + datazhi[i + 1].toString(2).padStart(8, '0');
+    const xRaw = xRaw16[0] == 1;
+    result.acc.x.push(xRaw ? (~parseInt(xRaw16, 2) + 1) * -1 : parseInt(xRaw16, 2));
+    result.acc.x_g.push(xRaw ? (~parseInt(xRaw16, 2) + 1) * -1 / 2048 : parseInt(xRaw16, 2) / 2048);
+
+    // 解析y轴
+    const yRaw16 = datazhi[i + 2].toString(2).padStart(8, '0') + datazhi[i + 3].toString(2).padStart(8, '0');
+    const yRaw = yRaw16[0] == 1;
+    result.acc.y.push(yRaw ? (~parseInt(yRaw16, 2) + 1) * -1 : parseInt(yRaw16, 2));
+    result.acc.y_g.push(yRaw ? (~parseInt(yRaw16, 2) + 1) * -1 / 2048 : parseInt(yRaw16, 2) / 2048);
+
+    // 解析z轴
+    const zRaw16 = datazhi[i + 4].toString(2).padStart(8, '0') + datazhi[i + 5].toString(2).padStart(8, '0');
+    const zRaw = zRaw16[0] == 1;
+    result.acc.z.push(zRaw ? (~parseInt(zRaw16, 2) + 1) * -1 : parseInt(zRaw16, 2));
+    result.acc.z_g.push(zRaw ? (~parseInt(zRaw16, 2) + 1) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
+  }
   console.log('没有转换单位x轴的第一个值');
   console.log(result.acc.x[0]);
   console.log('转换单位后x轴的第一个值');

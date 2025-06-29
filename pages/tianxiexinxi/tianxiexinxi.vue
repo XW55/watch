@@ -3,11 +3,6 @@
     <view>
       <view class="contents boxShadow">
         <view class="list">
-          <input type="text" placeholder="用户手机号" class="input-code" v-model="formData.phone" />
-        </view>
-      </view>
-      <view class="contents boxShadow">
-        <view class="list">
           <input
             type="text"
             placeholder="用户姓名"
@@ -23,6 +18,16 @@
               class="input-code"
               v-model="age"
               :class="{ hongxi: yonghuage }"
+              placeholder-class="font"
+            />
+          </view>
+          <view class="list">
+            <input
+              type="number"
+              placeholder="用户手机号"
+              class="input-code"
+              v-model="formData.phone"
+              :class="{ hongxi: yonghuphone }"
               placeholder-class="font"
             />
           </view>
@@ -64,7 +69,8 @@
       </view>
     </view>
 
-    <view class="btn boxShadow" @tap="clickOk()">开始检测</view>
+    <!-- <view class="btn boxShadow" @tap="clickOk()">开始检测</view> -->
+    <view class="btn boxShadow" @tap="startTest()">开始检测</view>
   </view>
 </template>
 
@@ -104,7 +110,9 @@ export default {
       // 姓名加红星
       yonghuname: true,
       // 年龄加红星
-      yonghuage: true
+      yonghuage: true,
+      // 姓名加红星
+      yonghuphone: true
     };
   },
   onLoad(options) {
@@ -124,6 +132,9 @@ export default {
   watch: {
     'formData.userName': function (newValue) {
       this.yonghuname = !newValue; // 如果有值则为 false
+    },
+    'formData.phone': function (newValue) {
+      this.yonghuphone = !newValue; // 如果有值则为 false
     },
     age(val) {
       this.formData.birthDay = this.calculateBirthDate(val * 1);
@@ -293,7 +304,11 @@ export default {
         });
     },
     //开始测试
-    startTest() {}
+    startTest() {
+      uni.navigateTo({
+        url: '/ecg/pages/index/index'
+      });
+    }
   }
 };
 </script>

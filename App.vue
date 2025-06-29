@@ -7,9 +7,11 @@ export default {
   },
   onShow: function () {
     console.log('App Show');
-    this.wugandengluapp();
+    uni.hideLoading();
+    // this.wugandengluapp();
   },
   onHide: function () {
+    uni.hideLoading();
     // uni.setStorageSync('pidian', '');
     // uni.setStorageSync('xindian', '');
     this.setble('');

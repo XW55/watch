@@ -14,6 +14,7 @@
         <view class="wenzi">{{ pidianble ? pidianble.name : '无皮电设备' }}</view>
       </view>
     </view>
+     <view class="tianxiexinxi" @click="tiaozhuanhuatu">跳转画图页面</view>
     <view class="tianxiexinxi" @click="tianxiexinxi">填写信息</view>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="sendEcgCommands(1, 86400)">
       发送24小时检测指令
@@ -26,7 +27,10 @@
     </u-button>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="onacc">开启加速度检测</u-button>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="offacc">关闭加速度检测</u-button>
-    <view class="search boxShadow">
+       <view style="width: 100%; height: 500rpx">
+      <lechartt ref="chart"></lechartt>
+    </view>
+  <!--  <view class="search boxShadow">
       <input type="text" placeholder="输入手机号或姓名" class="search-input" v-model="searchPhone" maxlength="11" />
       <view class="search-btn" @click="searchThis"><u-icon name="search" size="30"></u-icon></view>
     </view>
@@ -46,7 +50,6 @@
               >
                 <view hover-class="none">
                   <view class="patientInfo">
-                    <!-- <image class="iconfont icon-xindianxitong iconHert"></image> -->
                     <view class="info">
                       <view class="text">姓名:{{ item.patientName }}</view>
                       <view class="text">电话:{{ item.patientPhone }}</view>
@@ -62,12 +65,14 @@
             <MyEmpty v-else text="当前没有检测数据"></MyEmpty>
           </view>
         </scroll-view>
-      </view>
+      </view> -->
     </view>
   </view>
 </template>
 
 <script>
+  import lechartt from '@/uni_modules/lime-echart/components/l-echart/l-echart.vue';
+  import * as echarts from '@/uni_modules/lime-echart/components/l-echart/echarts.min4.9.js';
   import { wugandenglu } from '@/api/loginSign/index.js';
   import MyEmpty from '@/components/myEmpty.vue';
 import { mapState, mapMutations } from 'vuex';
@@ -86,7 +91,8 @@ export default {
     ...mapState(['xindianble', 'pidianble'])
   },
   components: {
-    MyEmpty
+    MyEmpty,
+    lechartt
   },
   watch: {
     xindianble: {
@@ -103,7 +109,11 @@ export default {
     }
   },
   onShow(){
+     uni.hideLoading();
     this.wugandengluapps();
+  },
+  mounted(){
+     this.initChart();
   },
   onReady() {
     let th = this;
@@ -118,6 +128,67 @@ export default {
     });
   },
   methods: {
+    initChart() {
+      const initOption = {
+        color: ['#1890FF', '#91CB74', '#FAC858'], // 主题色
+        legend: {
+          data: ['X', 'Y', 'Z']
+        },
+        xAxis: {
+          type: 'category'
+        },
+        yAxis: {
+          axisLine: {
+            show: true,
+            lineStyle: {
+              color: '#ccc'
+            }
+          },
+          type: 'value',
+          splitLine: {
+            lineStyle: {
+              type: 'dashed', // 网格线为虚线
+              width: 2, // 线宽为 2px
+              color: '#ccc' // 线条颜色为灰色
+            }
+          },
+        },
+        series: [
+          {
+            name: 'X',
+            data: [],
+            type: 'line',
+            symbol: 'none',
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2 },
+            color: '#1890FF'
+          },
+          {
+            name: 'Y',
+            data: [],
+            type: 'line',
+            symbol: 'none',
+            smooth: true,
+            showSymbol: false,
+            lineStyle: { width: 2 },
+            color: '#91CB74'
+          },
+          { 
+            name: 'Z', 
+            data: [], 
+            type: 'line', 
+            symbol: 'none', 
+            smooth: true, 
+            color: '#FAC858',
+          }
+        ]
+      };
+      this.$refs.chart.init(echarts, (chartInstance) => {
+        this.chartInstane = chartInstance;
+        this.chartInstane.setOption(initOption);
+      });
+    },
     // 发送ECG控制指令（动态心电记录仪，兼容启动/停止）
     sendEcgCommands(control, seconds) {
       // 参数校验：控制位合法性及时间范围（停止时时间参数无效，设为0）
@@ -194,9 +265,15 @@ export default {
         value: packet.buffer,
         success: () => {
           console.log(`${action}检测指令发送成功`);
-          th.gotoEcg && th.gotoEcg();
+          if(control == 1){
+            uni.navigateTo({
+              url:'/ecg/pages/index/index'
+            })
+          }
         },
-        fail: (e) => console.error(`${action}检测失败:`, e)
+        fail: (e) => {
+          console.error(`${action}检测失败:`, e)
+        }
       });
     },
     onacc() {
@@ -227,7 +304,7 @@ export default {
         success: (red) => {
           console.log('指令发送成功');
           console.log(red);
-          // th.gotoEcg();
+
         },
         fail: (e) => {
           console.error('发送失败:', e);
@@ -299,6 +376,11 @@ export default {
       uni.navigateTo({
         url: '/pageCheck/pages/lianjie/lianjie'
       });
+    },
+    tiaozhuanhuatu(){
+      uni.navigateTo({
+        url:'/ecg/pages/index/index'
+      })
     },
     tianxiexinxi(){
       uni.navigateTo({
