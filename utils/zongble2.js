@@ -377,7 +377,7 @@ function xindiantiejiaxishuju(value) {
       zhi[index] = point * 1
     });
     const sensorData = parseAccData(zhi)
-    xindianaccfun(1, sensorData.acc)
+    xindianaccfun(sensorData.acc)
   }
 }
 /**
@@ -652,9 +652,9 @@ function parseAccData(data) {
     result.acc.z_g.push(zRaw ? (~parseInt(zRaw16, 2) + 1) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
   }
   console.log('没有转换单位x轴的第一个值');
-  console.log(result.acc.x[0]);
+  console.log(result.acc.x);
   console.log('转换单位后x轴的第一个值');
-  console.log(result.acc.x_g[0]);
+  console.log(result.acc.x_g);
   return result;
 }
 let xindianaccfun = null;

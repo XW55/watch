@@ -76,6 +76,8 @@
   import { wugandenglu } from '@/api/loginSign/index.js';
   import MyEmpty from '@/components/myEmpty.vue';
 import { mapState, mapMutations } from 'vuex';
+
+import { xindianacc } from '@/utils/zongble2.js';
 export default {
   data() {
     return {
@@ -85,6 +87,8 @@ export default {
       total: 0,
       pageNum: 1,
        searchState: false,
+        chartInstane: null,
+             chartDataLength: 0
     };
   },
   computed: {
@@ -114,6 +118,7 @@ export default {
   },
   mounted(){
      this.initChart();
+         this.getbleshuju(); // 开始获取数据
   },
   onReady() {
     let th = this;
@@ -128,68 +133,125 @@ export default {
     });
   },
   methods: {
-    initChart() {
-      const initOption = {
+// 父组件中的getbleshuju方法
+    getbleshuju() {
+      xindianacc((res) => {
+     const xData = res.x
+     const yData = res.y
+     const zData = res.z
+   
+     let index = 0;
+     const total = xData.length;
+   
+     const timer = setInterval(() => {
+       if (index < total) {
+         this.addDataPoint(xData[index], yData[index], zData[index]);
+         index++;
+       } else {
+         clearInterval(timer);
+       }
+     }, 16); // 每 16ms 显示一个点（≈60FPS）
+      })
+    },
+    
+addDataPoint(xVal, yVal, zVal) {
+    const chart = this.chartInstane;
+    const maxLength = 20; // 固定长度为20
+
+    // 获取当前系列数据，并添加新值
+    let series = chart.getOption().series;
+    for (let i = 0; i < series.length; i++) {
+        if (i === 0) { // X轴数据
+            series[i].data.push(xVal);
+        } else if (i === 1) { // Y轴数据
+            series[i].data.push(yVal);
+        } else { // Z轴数据
+            series[i].data.push(zVal);
+        }
+        // 限制数据长度
+        if (series[i].data.length > maxLength) {
+            series[i].data.shift();
+        }
+    }
+
+    // 更新图表选项
+    chart.setOption({
+        series: series,
+        xAxis: {
+            data: Array.from({ length: maxLength }, (_, i) => ''), // 不显示X轴标签
+        },
+    });
+},
+initChart() {
+    const initOption = {
         color: ['#1890FF', '#91CB74', '#FAC858'], // 主题色
         legend: {
-          data: ['X', 'Y', 'Z']
+            data: ['X', 'Y', 'Z']
         },
         xAxis: {
-          type: 'category'
+            type: 'category',
+            axisLabel: {
+                show: false // 隐藏X轴标签
+            }
+        },
+        grid: {
+            top: '10%',
+            // containLabel: true
         },
         yAxis: {
-          axisLine: {
-            show: true,
-            lineStyle: {
-              color: '#ccc'
-            }
-          },
-          type: 'value',
-          splitLine: {
-            lineStyle: {
-              type: 'dashed', // 网格线为虚线
-              width: 2, // 线宽为 2px
-              color: '#ccc' // 线条颜色为灰色
-            }
-          },
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#ccc'
+                }
+            },
+            type: 'value',
+            splitLine: {
+                lineStyle: {
+                    type: 'solid', // 网格线为实线
+                    width: 0.5, // 线宽为 0.5px
+                    color: '#ccc' // 线条颜色为灰色
+                }
+            },
         },
         series: [
-          {
-            name: 'X',
-            data: [],
-            type: 'line',
-            symbol: 'none',
-            smooth: true,
-            showSymbol: false,
-            lineStyle: { width: 2 },
-            color: '#1890FF'
-          },
-          {
-            name: 'Y',
-            data: [],
-            type: 'line',
-            symbol: 'none',
-            smooth: true,
-            showSymbol: false,
-            lineStyle: { width: 2 },
-            color: '#91CB74'
-          },
-          { 
-            name: 'Z', 
-            data: [], 
-            type: 'line', 
-            symbol: 'none', 
-            smooth: true, 
-            color: '#FAC858',
-          }
+            {
+                name: 'X',
+                data: [],
+                type: 'line',
+                symbol: 'none',
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1 },
+                color: '#1890FF'
+            },
+            {
+                name: 'Y',
+                data: [],
+                type: 'line',
+                symbol: 'none',
+                smooth: true,
+                showSymbol: false,
+                lineStyle: { width: 1 },
+                color: '#91CB74'
+            },
+            { 
+                name: 'Z', 
+                data: [], 
+                type: 'line', 
+                symbol: 'none', 
+                smooth: true, 
+               lineStyle: { width: 1 },
+                color: '#FAC858',
+            }
         ]
-      };
-      this.$refs.chart.init(echarts, (chartInstance) => {
+    };
+    this.$refs.chart.init(echarts, (chartInstance) => {
         this.chartInstane = chartInstance;
         this.chartInstane.setOption(initOption);
-      });
-    },
-    // 发送ECG控制指令（动态心电记录仪，兼容启动/停止）
+    });
+},
+// 发送ECG控制指令（动态心电记录仪，兼容启动/停止）
     sendEcgCommands(control, seconds) {
       // 参数校验：控制位合法性及时间范围（停止时时间参数无效，设为0）
       if (!this.xindianble) {
