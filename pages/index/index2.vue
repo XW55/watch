@@ -27,6 +27,7 @@
     </u-button>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="onacc">开启加速度检测</u-button>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="offacc">关闭加速度检测</u-button>
+    <navigator url="/eeg/pages/index/index">脑电</navigator>
        <view style="width: 100%; height: 500rpx">
       <lechartt ref="chart"></lechartt>
     </view>

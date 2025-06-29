@@ -48,82 +48,92 @@
     // }
   ],
   "subPackages": [{
-    "root": "loginSign",
-    "pages": [{
-        "path": "pages/login/login",
-        "style": {
-          "navigationBarTitleText": "",
-          "enablePullDownRefresh": false,
-          "navigationStyle": "custom"
+      "root": "loginSign",
+      "pages": [{
+          "path": "pages/login/login",
+          "style": {
+            "navigationBarTitleText": "",
+            "enablePullDownRefresh": false,
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/privacyServices/privacyServices",
+          "style": {
+            "navigationBarTitleText": ""
+          }
+        },
+        {
+          "path": "pages/information/information",
+          "style": {
+            "navigationBarTitleText": "",
+            "navigationStyle": "custom"
+          }
+        }, {
+          "path": "pages/modify/modify",
+          "style": {
+            "navigationBarTitleText": "修改信息",
+            "enablePullDownRefresh": false
+          }
         }
-      },
-      {
-        "path": "pages/privacyServices/privacyServices",
-        "style": {
-          "navigationBarTitleText": ""
-        }
-      },
-      {
-        "path": "pages/information/information",
-        "style": {
-          "navigationBarTitleText": "",
-          "navigationStyle": "custom"
-        }
-      }, {
-        "path": "pages/modify/modify",
-        "style": {
-          "navigationBarTitleText": "修改信息",
-          "enablePullDownRefresh": false
-        }
-      }
-    ]
-  }, {
-    "root": "pageCheck",
-    "pages": [{
-        "path": "pages/new12/connect",
-        "style": {
-          "navigationBarTitleText": "",
-          "enablePullDownRefresh": false,
-          "navigationStyle": "custom"
-        }
-      },
-      {
-        "path": "pages/pidian/pidian",
-        "style": {
-          "navigationBarTitleText": "皮电数据",
-          "enablePullDownRefresh": false
+      ]
+    }, {
+      "root": "pageCheck",
+      "pages": [{
+          "path": "pages/new12/connect",
+          "style": {
+            "navigationBarTitleText": "",
+            "enablePullDownRefresh": false,
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/pidian/pidian",
+          "style": {
+            "navigationBarTitleText": "皮电数据",
+            "enablePullDownRefresh": false
 
+          }
+        },
+        {
+          "path": "pages/search/search",
+          "style": {
+            "navigationBarTitleText": "搜索",
+            "enablePullDownRefresh": false
+          }
+        },
+        {
+          "path": "pages/ecgChart/ecgChart",
+          "style": {
+            "navigationBarTitleText": ""
+          }
+        },
+        {
+          "path": "pages/lianjie/lianjie",
+          "style": {
+            "navigationBarTitleText": "连接"
+          }
         }
-      },
-      {
-        "path": "pages/search/search",
+      ]
+    }, {
+      "root": "ecg",
+      "pages": [{
+        "path": "pages/index/index",
         "style": {
-          "navigationBarTitleText": "搜索",
-          "enablePullDownRefresh": false
+          "navigationBarTitleText": "心电"
         }
-      },
-      {
-        "path": "pages/ecgChart/ecgChart",
+      }]
+    },
+    {
+      "root": "eeg",
+      "pages": [{
+        "path": "pages/index/index",
         "style": {
-          "navigationBarTitleText": ""
+          "navigationBarTitleText": "脑电"
         }
-      },
-      {
-        "path": "pages/lianjie/lianjie",
-        "style": {
-          "navigationBarTitleText": "连接"
-        }
-      }
-    ]
-  }, {
-    "root": "ecg",
-    "pages": [{
-      "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "心电"
-      }
-    }]
-  }],
+      }]
+    }
+  ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarBackgroundColor": "#fff",
