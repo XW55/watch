@@ -233,14 +233,8 @@ export function nowLinkLisjs(items, index, huidiao) {
           characteristicId: items.name.startsWith('MP') ?
             '6e4000f3-b5a3-f393-e0a9-e50e24dcca9e' : 'DE5BF729-D711-4E47-AF26-65E3012A5DC7',
           success: (res) => {
-            // console.log('启用监听了', res);
-
             uni.hideLoading();
             uni.onBLECharacteristicValueChange((res) => {
-              // console.log('-------------');
-              // console.log(res);
-              // console.log(kaishijieshou);
-              // if (kaishijieshou) {
               if (res.serviceId == 'DE5BF728-D711-4E47-AF26-65E3012A5DC7') {
                 xindiancishu = 0;
                 xindiantiejiaxishuju(res.value)
@@ -248,7 +242,6 @@ export function nowLinkLisjs(items, index, huidiao) {
                 pidiancishu = 0;
                 processIncomingData(res.value)
               }
-              // }
             });
           },
           fail: (res) => {
@@ -315,42 +308,17 @@ export function nowLinkLisjs(items, index, huidiao) {
   });
 }
 
-function formatString(str) {
-  let result = [];
-  for (let i = 0; i < str.length; i += 2) {
-    let pair = str.substring(i, i + 2);
-    result.push('0x' + pair);
-  }
-  return result.join(' ');
-}
-// ArrayBuffer转16进度字符串示例
-function ab2hex(buffer) {
-  const hexArr = Array.prototype.map.call(new Uint8Array(buffer), function(bit) {
-    return ('00' + bit.toString(16)).slice(-2);
-  });
-  return hexArr.join('');
-}
-
 function xindiantiejiaxishuju(value) {
-  const unit8Arr = new Uint8Array(value);
+  const unit8Arr = Array.from(new Uint8Array(value), byte => byte);
   console.log(unit8Arr);
-  console.log(unit8Arr[0x01]);
+  // console.log(unit8Arr.length);
+  // console.log(unit8Arr[0x01]);
   if (unit8Arr[0x01] == 0x32) {
     if (unit8Arr[0x06] == 0x02) {
       console.warn('导联脱落');
     }
   } else if (unit8Arr[0x01] == 0x31) {
-    // console.log('-------------');
-    // console.log(res);
-    // console.log(res.value);
-    // console.log(ab2hex(res.value));
-    let data = formatString(ab2hex(unit8Arr));
-    // console.log(data);
-    let hexArray = data.split(' ');
-    // console.log(hexArray);
-    const result = parseEcgData(hexArray);
-    // console.log(hexArray.length);
-    // 处理解析结果
+    const result = parseEcgData(unit8Arr);
     if (result.success) {
       console.log(`成功解析${result.pointsCount}个心电数据点`);
       let zhi = []
@@ -359,10 +327,6 @@ function xindiantiejiaxishuju(value) {
       });
       console.log(zhi);
       bledata(1, ['II'], zhi)
-      // shuju.push(...zhi)
-      // console.log(JSON.stringify(shuju));
-      // 在实际应用中，这里可以将数据传递给图表组件进行绘制
-      // 例如使用uni-charts绘制心电图波形
     } else {
       console.error("心电数据解析失败:", result.error);
       if (result.details) {
@@ -370,88 +334,77 @@ function xindiantiejiaxishuju(value) {
       }
     }
   } else if (unit8Arr[0x01] == 0x33) {
-    let data = formatString(ab2hex(unit8Arr));
-    let hexArray = data.split(' ');
-    let zhi = []
-    hexArray.forEach((point, index) => {
-      zhi[index] = point * 1
-    });
-    const sensorData = parseAccData(zhi)
-    xindianaccfun(sensorData.acc)
+    const sensorDatass = parseIMUData(unit8Arr)
+    xindianaccfun(sensorDatass.acc)
   }
 }
+
 /**
  * 解析心电数据数组
  * @param {Array} hexArray 十六进制字符串数组，如 ["0xbc", "0x31", ...]
  * @param {number} gainFactor 增益倍数，默认1000
  * @returns {Object} 解析结果对象
  */
-function parseEcgData(hexArray, gainFactor = 1000) {
-  // 1. 转换十六进制字符串为字节数组
-  const byteArray = hexArray.map(item => {
-    const hex = item.replace(/^0x/i, ''); // 移除0x前缀
-    return parseInt(hex, 16);
-  });
+function parseEcgData(byteArray, gainFactor = 1000) {
+  // // 2. 基础格式验证
+  // if (byteArray.length < 6) {
+  //   return {
+  //     success: false,
+  //     error: '数据长度不足，无法解析'
+  //   };
+  // }
 
-  // 2. 基础格式验证
-  if (byteArray.length < 6) {
-    return {
-      success: false,
-      error: '数据长度不足，无法解析'
-    };
-  }
+  // // 验证魔数和指令类型
+  // if (byteArray[0] !== 0xBC || byteArray[1] !== 0x31) {
+  //   return {
+  //     success: false,
+  //     error: '无效的指令格式，非ECG_DATA数据',
+  //     details: {
+  //       magicByte: byteArray[0],
+  //       command: byteArray[1]
+  //     }
+  //   };
+  // }
 
-  // 验证魔数和指令类型
-  if (byteArray[0] !== 0xBC || byteArray[1] !== 0x31) {
-    return {
-      success: false,
-      error: '无效的指令格式，非ECG_DATA数据',
-      details: {
-        magicByte: byteArray[0],
-        command: byteArray[1]
-      }
-    };
-  }
+  // // 3. 解析数据长度（小端模式）
+  // const dataLength = byteArray[2] + (byteArray[3] << 8);
 
-  // 3. 解析数据长度（小端模式）
-  const dataLength = byteArray[2] + (byteArray[3] << 8);
+  // // 4. 解析校验和（小端模式）
+  // const receivedChecksum = byteArray[4] + (byteArray[5] << 8);
 
-  // 4. 解析校验和（小端模式）
-  const receivedChecksum = byteArray[4] + (byteArray[5] << 8);
+  // // 5. 计算数据区校验和
+  // let calculatedChecksum = 0;
+  // for (let i = 6; i < byteArray.length; i++) {
+  //   calculatedChecksum += byteArray[i];
+  // }
 
-  // 5. 计算数据区校验和
-  let calculatedChecksum = 0;
-  for (let i = 6; i < byteArray.length; i++) {
-    calculatedChecksum += byteArray[i];
-  }
+  // // 6. 校验和验证
+  // if (calculatedChecksum !== receivedChecksum) {
+  //   return {
+  //     success: false,
+  //     error: '数据校验和错误',
+  //     details: {
+  //       received: receivedChecksum,
+  //       calculated: calculatedChecksum
+  //     }
+  //   };
+  // }
 
-  // 6. 校验和验证
-  if (calculatedChecksum !== receivedChecksum) {
-    return {
-      success: false,
-      error: '数据校验和错误',
-      details: {
-        received: receivedChecksum,
-        calculated: calculatedChecksum
-      }
-    };
-  }
-
-  // 7. 数据长度验证
-  if (byteArray.length - 6 !== dataLength) {
-    return {
-      success: false,
-      error: '数据长度不匹配',
-      details: {
-        expected: dataLength,
-        actual: byteArray.length - 6
-      }
-    };
-  }
+  // // 7. 数据长度验证
+  // if (byteArray.length - 6 !== dataLength) {
+  //   return {
+  //     success: false,
+  //     error: '数据长度不匹配',
+  //     details: {
+  //       expected: dataLength,
+  //       actual: byteArray.length - 6
+  //     }
+  //   };
+  // }
 
   // 8. 解析心电数据点
   const dataPoints = [];
-  for (let i = 8; i < byteArray.length; i += 2) {
+  for (let i = 10; i < byteArray.length; i += 2) {
     if (i + 1 >= byteArray.length) break; // 防止越界
 
     // 读取两个字节（小端模式）
@@ -478,55 +431,72 @@ function parseEcgData(hexArray, gainFactor = 1000) {
   return {
     success: true,
     command: 'ECG_DATA (0x31)',
-    dataLength: dataLength,
-    checksum: receivedChecksum,
     pointsCount: dataPoints.length,
     dataPoints: dataPoints
   };
 }
 
-function parseSensorData(byteArray) {
-  console.log('parseSensorData');
-  console.log(byteArray);
-  console.log(byteArray.length);
-  const accXArray = [];
-  const accYArray = [];
-  const accZArray = [];
-  const gyroXArray = [];
-  const gyroYArray = [];
-  const gyroZArray = [];
+let xindianaccfun = null;
+export function xindianacc(callback, zhi = 1) {
+  xindianaccfun = callback;
+}
 
-  // Assuming Data class functionality is replaced with direct byte array processing
-  for (let i = 0; i < byteArray.length; i += 12) {
-    // Extract 16-bit signed values (big-endian)
-    const getInt16BE = (offset) => {
-      const value = (byteArray[i + offset] << 8) | byteArray[i + offset + 1];
-      return value > 32767 ? value - 65536 : value; // Convert to signed
-    };
 
-    const accX = getInt16BE(0);
-    const accY = getInt16BE(2);
-    const accZ = getInt16BE(4);
-    const gyroX = getInt16BE(6);
-    const gyroY = getInt16BE(8);
-    const gyroZ = getInt16BE(10);
+/**
+ * 计算角速度值
+ * @param {Array} data - 数据数组
+ * @param {number} index - 起始索引
+ * @returns {number} 角速度值 (°/s)
+ */
+function calculateGyro(data, index) {
+  // 小端模式读取两个字节
+  const lowByte = data[index];
+  const highByte = data[index + 1];
 
-    // Convert to physical values
-    const accXg = accX * 16 / 32768;
-    const accYg = accY * 16 / 32768;
-    const accZg = accZ * 16 / 32768;
+  // 组合成16位整数
+  const gyro = (highByte << 8) | lowByte;
 
-    const gyroXdps = gyroX * 2000 / 32768;
-    const gyroYdps = gyroY * 2000 / 32768;
-    const gyroZdps = gyroZ * 2000 / 32768;
+  // 应用公式计算角速度 (°/s)
+  // 公式: gyro_g = (float)gyro * 2000 / 32768
+  return (gyro * 2000) / 32768;
+}
 
-    accXArray.push(accXg);
-    accYArray.push(accYg);
-    accZArray.push(accZg);
+// 金辉有符号处理
+function parseIMUData(zhi) {
+  let dataBytes = zhi.slice(-120);
+  // console.log(dataBytes);
+  console.log(dataBytes);
+  const accXArray = [],
+    accYArray = [],
+    accZArray = [];
+  const gyroXArray = [],
+    gyroYArray = [],
+    gyroZArray = [];
 
-    gyroXArray.push(gyroXdps);
-    gyroYArray.push(gyroYdps);
-    gyroZArray.push(gyroZdps);
+  for (let i = 0; i < dataBytes.length; i += 12) {
+    if (i + 11 >= dataBytes.length) break;
+
+    // 加速度计解析（大端）
+    const accX = (dataBytes[i] << 8) | dataBytes[i + 1];
+    const accY = (dataBytes[i + 2] << 8) | dataBytes[i + 3];
+    const accZ = (dataBytes[i + 4] << 8) | dataBytes[i + 5];
+
+    // 陀螺仪解析（大端）
+    const gyroX = (dataBytes[i + 6] << 8) | dataBytes[i + 7];
+    const gyroY = (dataBytes[i + 8] << 8) | dataBytes[i + 9];
+    const gyroZ = (dataBytes[i + 10] << 8) | dataBytes[i + 11];
+
+    // 有符号处理
+    const toSigned16 = (v) => v > 32767 ? v - 65536 : v;
+
+    // 单位转换
+    accXArray.push(toSigned16(accX) * 16 / 32768);
+    accYArray.push(toSigned16(accY) * 16 / 32768);
+    accZArray.push(toSigned16(accZ) * 16 / 32768);
+
+    gyroXArray.push(toSigned16(gyroX) * 2000 / 32768);
+    gyroYArray.push(toSigned16(gyroY) * 2000 / 32768);
+    gyroZArray.push(toSigned16(gyroZ) * 2000 / 32768);
   }
 
   return {
@@ -541,123 +511,4 @@ function parseSensorData(byteArray) {
       z: gyroZArray
     }
   };
-}
-/**
- * 解析加速度数据（从索引8开始读取，按轴分离数据）
- * @param {Uint8Array} data - 原始数据缓冲区
- * @returns {Object} 包含加速度数据（分轴、分单位）的对象
- */
-function parseAccData(data) {
-  // console.log(data.length);
-  let datazhi = data.slice(-120)
-  // console.log(datazhi.length);
-  const result = {
-    acc: {
-      x: [], // 无单位原始值（x轴）
-      y: [], // 无单位原始值（y轴）
-      z: [], // 无单位原始值（z轴）
-      x_g: [], // 有单位值（g，x轴）
-      y_g: [], // 有单位值（g，y轴）
-      z_g: [] // 有单位值（g，z轴）
-    },
-    // gyro: {
-    //   x: [],
-    //   y: [],
-    //   z: [], // 文档未提及陀螺仪，留空
-    //   x_unit: [],
-    //   y_unit: [],
-    //   z_unit: []
-    // }
-  };
-  console.log('-----------------------');
-  // console.log(datazhi[0]);
-  // console.log(datazhi[1]);
-  // 从索引8开始解析（跳过前8字节非加速度数据）
-  // for (let i = 0; i <= datazhi.length - 6; i += 6) {
-  //   // 解析x轴：先组合为16位无符号数，再转换为有符号数
-  //   const xRaw16 = ((datazhi[i] << 8) | datazhi[i + 1]) & 0xFFFF;
-  //   const xRaw = xRaw16 >= 0x8000 ? xRaw16 - 0x10000 : xRaw16;
-  //   result.acc.x.push(xRaw);
-  //   result.acc.x_g.push(xRaw / 2048);
-
-  //   // 解析y轴
-  //   const yRaw16 = ((datazhi[i + 2] << 8) | datazhi[i + 3]) & 0xFFFF;
-  //   const yRaw = yRaw16 >= 0x8000 ? yRaw16 - 0x10000 : yRaw16;
-  //   result.acc.y.push(yRaw);
-  //   result.acc.y_g.push(yRaw / 2048);
-
-  //   // 解析z轴
-  //   const zRaw16 = ((datazhi[i + 4] << 8) | datazhi[i + 5]) & 0xFFFF;
-  //   const zRaw = zRaw16 >= 0x8000 ? zRaw16 - 0x10000 : zRaw16;
-  //   result.acc.z.push(zRaw);
-  //   result.acc.z_g.push(zRaw / 2048);
-  // }
-  // for (let i = 0; i <= datazhi.length - 6; i += 6) {
-  //   // 解析x轴：先组合为16位无符号数，再转换为有符号数
-  //   const xRaw16 = datazhi[i + 1].toString(2).padStart(8, '0') + datazhi[i].toString(2).padStart(8, '0');
-  //   const xRaw = xRaw16[0] == 1;
-  //   result.acc.x.push(xRaw ? parseInt(xRaw16, 2) * -1 : parseInt(xRaw16, 2));
-  //   result.acc.x_g.push(xRaw ? parseInt(xRaw16, 2) * -1 / 2048 : parseInt(xRaw16, 2) / 2048);
-
-  //   // 解析y轴
-  //   const yRaw16 = datazhi[i + 3].toString(2).padStart(8, '0') + datazhi[i + 2].toString(2).padStart(8, '0');
-  //   const yRaw = yRaw16[0] == 1;
-  //   result.acc.y.push(yRaw ? parseInt(yRaw16, 2) * -1 : parseInt(yRaw16, 2));
-  //   result.acc.y_g.push(yRaw ? parseInt(yRaw16, 2) * -1 / 2048 : parseInt(yRaw16, 2) / 2048);
-
-  //   // 解析z轴
-  //   const zRaw16 = datazhi[i + 5].toString(2).padStart(8, '0') + datazhi[i + 4].toString(2).padStart(8, '0');
-  //   const zRaw = zRaw16[0] == 1;
-  //   result.acc.z.push(zRaw ? parseInt(zRaw16, 2) * -1 : parseInt(zRaw16, 2));
-  //   result.acc.z_g.push(zRaw ? parseInt(zRaw16, 2) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
-  // }
-
-  // for (let i = 0; i <= datazhi.length - 6; i += 6) {
-  //   // 解析x轴：先组合为16位无符号数，再转换为有符号数
-  //   const xRaw16 = datazhi[i].toString(2).padStart(8, '0') + datazhi[i + 1].toString(2).padStart(8, '0');
-  //   const xRaw = xRaw16[0] == 1;
-  //   result.acc.x.push(xRaw ? parseInt(xRaw16, 2) * -1 : parseInt(xRaw16, 2));
-  //   result.acc.x_g.push(xRaw ? parseInt(xRaw16, 2) * -1 / 2048 : parseInt(xRaw16, 2) / 2048);
-
-  //   // 解析y轴
-  //   const yRaw16 = datazhi[i + 2].toString(2).padStart(8, '0') + datazhi[i + 3].toString(2).padStart(8, '0');
-  //   const yRaw = yRaw16[0] == 1;
-  //   result.acc.y.push(yRaw ? parseInt(yRaw16, 2) * -1 : parseInt(yRaw16, 2));
-  //   result.acc.y_g.push(yRaw ? parseInt(yRaw16, 2) * -1 / 2048 : parseInt(yRaw16, 2) / 2048);
-
-  //   // 解析z轴
-  //   const zRaw16 = datazhi[i + 4].toString(2).padStart(8, '0') + datazhi[i + 5].toString(2).padStart(8, '0');
-  //   const zRaw = zRaw16[0] == 1;
-  //   result.acc.z.push(zRaw ? parseInt(zRaw16, 2) * -1 : parseInt(zRaw16, 2));
-  //   result.acc.z_g.push(zRaw ? parseInt(zRaw16, 2) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
-  // }
-
-  for (let i = 0; i <= datazhi.length - 6; i += 6) {
-    // 解析x轴：先组合为16位无符号数，再转换为有符号数
-    const xRaw16 = datazhi[i].toString(2).padStart(8, '0') + datazhi[i + 1].toString(2).padStart(8, '0');
-    const xRaw = xRaw16[0] == 1;
-    result.acc.x.push(xRaw ? (~parseInt(xRaw16, 2) + 1) * -1 : parseInt(xRaw16, 2));
-    result.acc.x_g.push(xRaw ? (~parseInt(xRaw16, 2) + 1) * -1 / 2048 : parseInt(xRaw16, 2) / 2048);
-
-    // 解析y轴
-    const yRaw16 = datazhi[i + 2].toString(2).padStart(8, '0') + datazhi[i + 3].toString(2).padStart(8, '0');
-    const yRaw = yRaw16[0] == 1;
-    result.acc.y.push(yRaw ? (~parseInt(yRaw16, 2) + 1) * -1 : parseInt(yRaw16, 2));
-    result.acc.y_g.push(yRaw ? (~parseInt(yRaw16, 2) + 1) * -1 / 2048 : parseInt(yRaw16, 2) / 2048);
-
-    // 解析z轴
-    const zRaw16 = datazhi[i + 4].toString(2).padStart(8, '0') + datazhi[i + 5].toString(2).padStart(8, '0');
-    const zRaw = zRaw16[0] == 1;
-    result.acc.z.push(zRaw ? (~parseInt(zRaw16, 2) + 1) * -1 : parseInt(zRaw16, 2));
-    result.acc.z_g.push(zRaw ? (~parseInt(zRaw16, 2) + 1) * -1 / 2048 : parseInt(zRaw16, 2) / 2048);
-  }
-  console.log('没有转换单位x轴的第一个值');
-  console.log(result.acc.x);
-  console.log('转换单位后x轴的第一个值');
-  console.log(result.acc.x_g);
-  return result;
-}
-let xindianaccfun = null;
-export function xindianacc(callback, zhi = 1) {
-  xindianaccfun = callback;
 }

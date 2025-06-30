@@ -142,7 +142,7 @@ export default {
     setOnDataParsed((type, data) => {
       this.updateChartData(data);
     }, 1);
-    xindianacc((type, data) => {
+    xindianacc((data) => {
       this.updateChartDatas(data);
     }, 1);
     setzhuyes((data) => {
