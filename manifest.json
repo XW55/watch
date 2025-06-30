@@ -17,7 +17,9 @@
             "delay" : 0
         },
         /* 模块配置 */
-        "modules" : {},
+        "modules" : {
+            "Bluetooth" : {}
+        },
         /* 应用发布信息 */
         "distribute" : {
             /* android打包配置 */
@@ -48,10 +50,10 @@
             "sdkConfigs" : {}
         },
         "nativePlugins" : {
-            "libmuse_android" : {
+            "Muse-Manager" : {
                 "__plugin_info__" : {
-                    "name" : "libmuse_android",
-                    "description" : "",
+                    "name" : "Muse-Manager",
+                    "description" : "Muse-Manager",
                     "platforms" : "Android",
                     "url" : "",
                     "android_package_name" : "",
