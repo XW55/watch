@@ -1,0 +1,18 @@
+{
+  "name": "Muse-Manager",
+  "id": "Muse-Manager",
+  "version": "1.0.0",
+  "description": "Muse-Manager",
+  "_dp_type": "nativeplugin",
+  "_dp_nativeplugin": {
+    "android": {
+      "plugins": [{
+        "type": "module",
+        "name": "Muse-Manager",
+        "class": "com.example.musemanager.MuseManager"
+      }],
+      "integrateType": "aar",
+      "minSdkVersion": 28
+    }
+  }
+}
