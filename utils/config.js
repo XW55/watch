@@ -244,59 +244,64 @@ function parsePPGData(bufferArray) {
     ].map(b => b.toString(16).padStart(2, "0")).join(""),
     dataType: view.getUint8(8),
     timestamp: view.getUint16(9, false), // 大端序
-    red: Array.from({
-      length: 4
-    }, () => []),
-    infrared: Array.from({
-      length: 4
-    }, () => []),
+    samples: [], // 改为按采样点存储
     acc: {
       x: 0,
       y: 0,
       z: 0
-    },
-    SpO2: null,
+    }
   };
 
-  // 解析红光数据
-  for (let channel = 0; channel < 4; channel++) {
-    for (let sample = 0; sample < 5; sample++) {
-      const offset = 11 + (channel * 5 + sample) * 4;
+  // 解析5个采样点 (每个采样点32字节)
+  for (let sampleIndex = 0; sampleIndex < 5; sampleIndex++) {
+    const sampleOffset = 11 + sampleIndex * 32;
+
+    const sample = {
+      red: new Array(4),
+      infrared: new Array(4)
+    };
+
+    // 解析红光通道 (前16字节)
+    for (let channel = 0; channel < 4; channel++) {
+      const offset = sampleOffset + channel * 4;
       const status = view.getUint8(offset);
-      const value = ((view.getUint8(offset + 1) << 16) |
+      const value = (view.getUint8(offset + 1) << 16) |
         (view.getUint8(offset + 2) << 8) |
-        view.getUint8(offset + 3)) >>> 0;
-      parsedData.red[channel].push({
+        view.getUint8(offset + 3);
+
+      sample.red[channel] = {
         status,
         value
-      });
+      };
     }
-  }
 
-  // 解析红外光数据
-  for (let channel = 0; channel < 4; channel++) {
-    for (let sample = 0; sample < 5; sample++) {
-      const offset = 91 + (channel * 5 + sample) * 4;
+    // 解析红外通道 (后16字节)
+    for (let channel = 0; channel < 4; channel++) {
+      const offset = sampleOffset + 16 + channel * 4;
       const status = view.getUint8(offset);
-      const value = ((view.getUint8(offset + 1) << 16) |
+      const value = (view.getUint8(offset + 1) << 16) |
         (view.getUint8(offset + 2) << 8) |
-        view.getUint8(offset + 3)) >>> 0;
-      parsedData.infrared[channel].push({
+        view.getUint8(offset + 3);
+
+      sample.infrared[channel] = {
         status,
         value
-      });
+      };
     }
+
+    parsedData.samples.push(sample);
   }
 
-  // 解析加速度数据 ✅ 放在这里
+  // 解析加速度数据 (171-176字节)
   const accelOffset = 171;
-  parsedData.acc.x = view.getInt16(accelOffset, false) * 32 / 32768;
-  parsedData.acc.y = view.getInt16(accelOffset + 2, false) * 32 / 32768;
-  parsedData.acc.z = view.getInt16(accelOffset + 4, false) * 32 / 32768;
+
+  // 使用协议指定的公式: data * 32 / 65535.0
+  parsedData.acc.x = (view.getInt16(accelOffset, false) * 32) / 65535.0;
+  parsedData.acc.y = (view.getInt16(accelOffset + 2, false) * 32) / 65535.0;
+  parsedData.acc.z = (view.getInt16(accelOffset + 4, false) * 32) / 65535.0;
 
   return parsedData;
 }
-
 
 function parseGSRData(bufferArray) {
   const view = new DataView(new Uint8Array(bufferArray).buffer);

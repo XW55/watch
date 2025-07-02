@@ -304,11 +304,11 @@ export default {
       }
     },
     tiapzhuanpidian() {
-      if (!uni.getStorageSync('token')) {
-        return uni.redirectTo({
-          url: '/loginSign/pages/login/login'
-        });
-      }
+      // if (!uni.getStorageSync('token')) {
+      //   return uni.redirectTo({
+      //     url: '/loginSign/pages/login/login'
+      //   });
+      // }
       console.log('首页中本地中得pidian设备');
       console.log(uni.getStorageSync('pidian'));
       if (uni.getStorageSync('pidian')) {

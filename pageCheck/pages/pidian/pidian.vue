@@ -87,6 +87,7 @@ export default {
   mounted() {
     // 注册回调，接收解析后的数据
     setOnDataParsed((type, data) => {
+      console.log(type, data);
       if (type.toUpperCase() == 'GSR' && this.isLog) {
         gsrUpload.push(...data.gsr);
       } else {
@@ -113,33 +114,36 @@ export default {
         }
       }
 
-      if (data.red && data.infrared) {
-        // 确保accIndex递增以反映新的时间点
+      if (data.samples && data.samples.length > 0) {
+        // 记录当前时间点
         this.redData.categories.push(this.accIndex++);
+        if (this.redData.categories.length > 50) {
+          this.redData.categories.shift();
+        }
 
-        for (let i = 0; i < Math.min(data.red.length, data.infrared.length); i++) {
-          const redValues = data.red[i].map((item) => item.value);
-          const irValues = data.infrared[i].map((item) => item.value);
+        for (let i = 0; i < 4; i++) {
+          let channelData = [];
 
-          // 假设redValues和irValues长度相同
-          for (let j = 0; j < Math.max(redValues.length, irValues.length); j++) {
-            if (j < redValues.length) {
-              this.redData.series[i * 2].data.push(redValues[j]);
+          // 收集 red[i] 的值
+          data.samples.forEach((sample) => {
+            if (sample.red[i]) {
+              channelData.push(sample.red[i].value);
             }
-            if (j < irValues.length) {
-              this.redData.series[i * 2 + 1].data.push(irValues[j]);
-            }
-          }
+          });
 
-          // 如果超出最大长度则移除最旧的数据
-          if (this.redData.series[i * 2].data.length > 10) {
-            this.redData.series[i * 2].data.shift();
-          }
-          if (this.redData.series[i * 2 + 1].data.length > 10) {
-            this.redData.series[i * 2 + 1].data.shift();
-          }
-          if (this.redData.categories.length > 50) {
-            this.redData.categories.shift();
+          // 收集 infrared[i] 的值
+          data.samples.forEach((sample) => {
+            if (sample.infrared[i]) {
+              channelData.push(sample.infrared[i].value);
+            }
+          });
+
+          // 推入对应通道
+          this.redData.series[i].data.push(...channelData);
+
+          // 控制最大长度为10，超过则删除最早的数据
+          if (this.redData.series[i].data.length > 50) {
+            this.redData.series[i].data.splice(0, this.redData.series[i].data.length - 50);
           }
         }
       }

@@ -1,18 +1,18 @@
 {
-  "name": "Muse-Manager",
-  "id": "Muse-Manager",
+  "name": "myspo2-release",
+  "id": "myspo2-release",
   "version": "1.0.0",
-  "description": "Muse-Manager",
+  "description": "myspo2-release",
   "_dp_type": "nativeplugin",
   "_dp_nativeplugin": {
     "android": {
       "plugins": [{
         "type": "module",
-        "name": "Muse-Manager",
-        "class": "com.example.musemanager.MuseManager"
+        "name": "myspo2-release",
+        "class": "com.example.myspo2.test"
       }],
       "integrateType": "aar",
-      "minSdkVersion": 28
+      "minSdkVersion": 21
     }
   }
 }
