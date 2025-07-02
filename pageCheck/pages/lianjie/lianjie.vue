@@ -3,11 +3,15 @@
     <view class="top">
       <view class="xiao">
         <view class="iconfont icon-jiankangjiance-40px tubiao"></view>
-        <view class="wenzi">{{ xindianble ? xindianble.name : '无心电设备连接' }}</view>
+        <view class="wenzi">{{ xindianble ? xindianble.name : '无心电设备' }}</view>
+      </view>
+      <view class="xiao">
+        <view class="iconfont icon-naodian tubiao"></view>
+        <view class="wenzi">{{ naodianble ? naodianble.name : '无脑电设备' }}</view>
       </view>
       <view class="xiao">
         <view class="iconfont icon-yundongshoubiao tubiao"></view>
-        <view class="wenzi">{{ pidianble ? pidianble.name : '无皮电设备连接' }}</view>
+        <view class="wenzi">{{ pidianble ? pidianble.name : '无皮电设备' }}</view>
       </view>
     </view>
     <view class="loading" v-if="log && !(bleDevs.length > 0)">
@@ -79,6 +83,7 @@
 </template>
 
 <script>
+// const muse = uni.requireNativePlugin('Muse-Manager');
 import { initBlejs, nowLinkLisjs } from '@/utils/zongble2.js';
 import { mapState, mapMutations } from 'vuex';
 export default {
@@ -107,7 +112,7 @@ export default {
     // clearInterval(this.timer);
   },
   computed: {
-    ...mapState(['xindianble', 'pidianble'])
+    ...mapState(['xindianble', 'pidianble', 'naodianble'])
   },
   watch: {
     xindianble: {
@@ -125,8 +130,27 @@ export default {
       deep: true
     }
   },
-  onLoad() {},
+  onLoad() {
+    plus.globalEvent.addEventListener('deviceList', (e) => {
+      console.log('设备列表:', e);
+      let zhi = typeof e === 'string' ? JSON.parse(e) : e;
+      let data = {
+        name: zhi.name,
+        deviceId: zhi.macAddress
+      };
+      // this.listerData.push(data);
+      this.log = false;
+      this.bleDevs.push(data);
+    });
+
+    // plus.globalEvent.addEventListener('connectionState', (e) => {
+    //   console.log('连接状态:', e);
+    //   let data = typeof e === 'string' ? JSON.parse(e) : e;
+    //   this.eegStatus = this.stateMap[data.CurrentConnectionState];
+    // });
+  },
   onShow() {
+    // this.init();
     // this.xindian = uni.getStorageSync('xindian');
     // console.log('心电设备');
     // console.log(this.xindian);
@@ -143,6 +167,22 @@ export default {
       this.shows = true;
       this.log = false;
     }
+
+    if (this.naodianble) {
+      this.totalList.push(this.naodianble);
+      this.shows = true;
+      this.log = false;
+    }
+  },
+  onHide() {
+    console.log('onHide');
+  },
+  onUnload() {
+    console.log('onUnload');
+    if (this.daojishidengshiqi) {
+      clearInterval(this.daojishidengshiqi);
+      this.daojishi = 20;
+    }
   },
   mounted() {
     // this.onBLEConnectionStateChange();
@@ -150,7 +190,8 @@ export default {
   methods: {
     ...mapMutations({
       setxindianble: 'SET_XINDIANBLE',
-      setpidianble: 'SET_PIDIANBLE'
+      setpidianble: 'SET_PIDIANBLE',
+      setnaodianble: 'SET_NAODIANBLE'
     }),
     checkboxChange(e) {
       if (e.target.value[0] && e.target.dataset.name) {
@@ -200,6 +241,8 @@ export default {
       this.log = true;
       this.bleDevs = [];
       this.deviceIds = [];
+      this.init();
+      // this.start();
       initBlejs((res) => {
         if (this.bleDevs.indexOf(res.devices[0]) == -1) {
           if (res.devices[0].name.startsWith('KY') || res.devices[0].name.startsWith('MP')) {
@@ -209,7 +252,54 @@ export default {
         }
       });
     },
-
+    // 初始化脑电设备
+    init() {
+      let th = this;
+      uni.getLocation({
+        type: 'wgs84',
+        success: () => {
+          th.initBluetooth();
+        },
+        fail: () => {
+          uni.showModal({ title: '提示', content: '请开启位置权限', showCancel: false });
+        }
+      });
+    },
+    initBluetooth() {
+      let th = this;
+      uni.openBluetoothAdapter({
+        success: () => {
+          console.log(getApp().globalData.muse);
+          getApp().globalData.muse.initMuse((res) => {
+            console.log('initMuse 回调:', res);
+            // this.data = JSON.stringify(res);
+            th.start();
+          });
+        },
+        fail: () => {
+          uni.showModal({ title: '提示', content: '请开启蓝牙', showCancel: false });
+        }
+      });
+    },
+    // 开始搜索脑电设备
+    start() {
+      getApp().globalData.muse.startListening((res) => {
+        console.log('start的回调', res);
+      });
+    },
+    // 停止搜索脑电设备
+    end() {
+      getApp().globalData.muse.stopListening((res) => {
+        console.log('end的回调', res);
+      });
+    },
+    // 断开脑电
+    disConnect() {
+      getApp().globalData.muse.disconnect((res) => {
+        console.log('disConnect的回调', res);
+        this.setnaodianble('');
+      });
+    },
     // 多选然后连接
     connectBle() {
       this.log = false;
@@ -223,25 +313,43 @@ export default {
       }
       // this.getData = [];
       this.deviceIds.forEach((item, index) => {
-        setTimeout(() => {
-          nowLinkLisjs(item, index, () => {
+        if (item.name.startsWith('MuseS')) {
+          th.end();
+          getApp().globalData.muse.connect(JSON.stringify({ sn: item.deviceId }), (res) => {
+            console.log('connect的回调', res);
+            // if (res.code == 200) {
+            // console.log('--------------------');
             th.shows = true;
             item.lianjie = true;
             th.totalList.push(item);
-            console.log('连接设备存入本地');
-            if (item.name.startsWith('KY')) {
-              th.setxindianble(item);
-            } else if (item.name.startsWith('MP')) {
-              th.setpidianble(item);
-            }
-            uni.showToast({
-              title: '连接蓝牙成功'
-            });
+            th.setnaodianble(item);
+            // }
           });
-        }, 800 * (index + 1));
+        } else {
+          setTimeout(() => {
+            nowLinkLisjs(item, index, () => {
+              th.shows = true;
+              item.lianjie = true;
+              th.totalList.push(item);
+              console.log('连接设备存入本地');
+              if (item.name.startsWith('KY')) {
+                th.setxindianble(item);
+              } else if (item.name.startsWith('MP')) {
+                th.setpidianble(item);
+              }
+              uni.showToast({
+                title: '连接蓝牙成功'
+              });
+            });
+          }, 800 * (index + 1));
+        }
       });
     },
     close() {
+      if (this.daojishidengshiqi) {
+        clearInterval(this.daojishidengshiqi);
+        this.daojishi = 20;
+      }
       let that = this;
       that.deviceIds = [];
       that.bleDevs = [];
@@ -252,33 +360,34 @@ export default {
           if (res.confirm) {
             for (let index = 0; index < that.totalList.length; index++) {
               let item = that.totalList[index];
-              // console.log('//////////////////////////');
-              // console.log(item);
-              uni.closeBLEConnection({
-                deviceId: item.deviceId,
-                success(res) {
-                  item.duankai = true;
-                  console.log(that.totalList);
-                  if (item.name.startsWith('MP')) {
-                    that.setpidianble('');
-                    console.log('皮电断开蓝牙成功', res);
-                  } else if (item.name.startsWith('KY')) {
-                    that.setxindianble('');
-                    console.log('心电断开蓝牙成功', res);
+              item.duankai = true;
+              if (item.name.startsWith('MuseS')) {
+                that.disConnect();
+              } else {
+                uni.closeBLEConnection({
+                  deviceId: item.deviceId,
+                  success(res) {
+                    if (item.name.startsWith('MP')) {
+                      that.setpidianble('');
+                      console.log('皮电断开蓝牙成功', res);
+                    } else if (item.name.startsWith('KY')) {
+                      that.setxindianble('');
+                      console.log('心电断开蓝牙成功', res);
+                    }
+                  },
+                  fail(res) {
+                    console.log('断开蓝牙失败', res);
                   }
-                  if (that.totalList.every((item) => item.duankai === true)) {
-                    console.log('断开蓝牙成功', res);
-                    that.totalList = [];
-                    that.shows = false;
-                    uni.showToast({
-                      title: '断开蓝牙成功'
-                    });
-                  }
-                },
-                fail(res) {
-                  console.log('断开蓝牙失败', res);
-                }
-              });
+                });
+              }
+              if (that.totalList.every((item) => item.duankai == true)) {
+                console.log('断开蓝牙成功', res);
+                that.totalList = [];
+                that.shows = false;
+                uni.showToast({
+                  title: '断开蓝牙成功'
+                });
+              }
             }
           }
         }

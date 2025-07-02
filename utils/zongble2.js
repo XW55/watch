@@ -310,7 +310,7 @@ export function nowLinkLisjs(items, index, huidiao) {
 
 function xindiantiejiaxishuju(value) {
   const unit8Arr = Array.from(new Uint8Array(value), byte => byte);
-  console.log(unit8Arr);
+  // console.log(unit8Arr);
   // console.log(unit8Arr.length);
   // console.log(unit8Arr[0x01]);
   if (unit8Arr[0x01] == 0x32) {
@@ -320,12 +320,12 @@ function xindiantiejiaxishuju(value) {
   } else if (unit8Arr[0x01] == 0x31) {
     const result = parseEcgData(unit8Arr);
     if (result.success) {
-      console.log(`成功解析${result.pointsCount}个心电数据点`);
+      // console.log(`成功解析${result.pointsCount}个心电数据点`);
       let zhi = []
       result.dataPoints.forEach((point, index) => {
         zhi[index] = point.voltage * 1
       });
-      console.log(zhi);
+      // console.log(zhi);
       bledata(1, ['II'], zhi)
     } else {
       console.error("心电数据解析失败:", result.error);
@@ -465,7 +465,7 @@ function calculateGyro(data, index) {
 function parseIMUData(zhi) {
   let dataBytes = zhi.slice(-120);
   // console.log(dataBytes);
-  console.log(dataBytes);
+  // console.log(dataBytes);
   const accXArray = [],
     accYArray = [],
     accZArray = [];
@@ -503,7 +503,10 @@ function parseIMUData(zhi) {
     acc: {
       x: accXArray,
       y: accYArray,
-      z: accZArray
+      z: accZArray,
+      x_g: gyroXArray,
+      y_g: gyroYArray,
+      z_g: gyroZArray
     },
     gyro: {
       x: gyroXArray,

@@ -5,6 +5,7 @@ export const baseUrl = 'https://ecg.mindyard.cn/prod-api/';
 
 // 算法获取数据
 const algorithmUrl = 'https://screen.mindyard.cn:84/';
+const algorithmUploadUrltext = 'https://screen.mindyard.cn/test/api/'
 // 算法上传接口
 const algorithmUploadUrl = 'https://chronic.mindyard.cn/';
 // 算法测试接口
@@ -152,13 +153,16 @@ export const request = (options, config = {}) => {
     case 2:
       selectedBaseUrl = algorithmUploadUrl;
       break;
+    case 3:
+      selectedBaseUrl = algorithmUploadUrltext;
+      break;
     default:
       selectedBaseUrl = baseUrl;
   }
 
   let headers = {};
 
-  if (options.urlType == 1 || options.urlType == 2) {
+  if (options.urlType == 1 || options.urlType == 2 || options.urlType == 3) {
     headers = options.header;
   } else {
     // 合并默认头部与自定义头部

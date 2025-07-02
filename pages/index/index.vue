@@ -66,6 +66,7 @@ import {
   shagnchuanshuju,
   xindianacc
 } from '@/utils/zongble2.js';
+
 import { setOnDataParsed, kaishipidianshangchuan } from '@/utils/config.js'; // 注意路径可能需要调整
 import { DrawEcg } from '@/pageCheck/components/xindraw12.js';
 import { xyzOption } from '@/utils/echartsOption.js';
@@ -115,6 +116,16 @@ export default {
   computed: {
     ...mapState(['xindianble', 'pidianble'])
   },
+  onUnload() {
+    setOnDataParsed(null, 1);
+    // setOnDataParsed((type, data) => {
+    //   this.updateChartData(data);
+    // }, 1);
+    // xindianacc(null, 1);
+    // xindianacc((data) => {
+    //   this.updateChartDatas(data);
+    // }, 1);
+  },
   onLoad(options) {
     let width = uni.getSystemInfoSync().windowWidth;
     this.leftDistance = (width / 750) * 320;
@@ -142,9 +153,9 @@ export default {
     setOnDataParsed((type, data) => {
       this.updateChartData(data);
     }, 1);
-    xindianacc((data) => {
-      this.updateChartDatas(data);
-    }, 1);
+    // xindianacc((data) => {
+    //   this.updateChartDatas(data);
+    // }, 1);
     setzhuyes((data) => {
       if (data) {
         // console.log('画II导联');

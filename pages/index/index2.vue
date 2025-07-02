@@ -7,7 +7,7 @@
       </view>
       <view class="xiao">
         <view class="iconfont icon-naodian tubiao"></view>
-        <view class="wenzi">{{ false ? xindianble.name : '无脑电设备' }}</view>
+        <view class="wenzi">{{ naodianble ? naodianble.name : '无脑电设备' }}</view>
       </view>
       <view class="xiao">
         <view class="iconfont icon-yundongshoubiao tubiao"></view>
@@ -28,7 +28,7 @@
     <u-button class="" style="margin: 10px 0; text-align: center" @click="onacc">开启加速度检测</u-button>
     <u-button class="" style="margin: 10px 0; text-align: center" @click="offacc">关闭加速度检测</u-button>
     <navigator url="/eeg/pages/index/index">脑电</navigator>
-       <view style="width: 100%; height: 500rpx">
+    <view style="width: 100%; height: 500rpx">
       <lechartt ref="chart"></lechartt>
     </view>
   <!--  <view class="search boxShadow">
@@ -89,11 +89,12 @@ export default {
       pageNum: 1,
        searchState: false,
         chartInstane: null,
-             chartDataLength: 0
+             chartDataLength: 0,
+             timer:null
     };
   },
   computed: {
-    ...mapState(['xindianble', 'pidianble'])
+    ...mapState(['xindianble', 'pidianble','naodianble'])
   },
   components: {
     MyEmpty,
@@ -111,27 +112,44 @@ export default {
         // this.setpidianble(newVal);
       },
       deep: true
+    },
+    naodianble: {
+      handler(newVal) {
+        // this.setpidianble(newVal);
+      },
+      deep: true
     }
   },
   onShow(){
+    // console.log('-------------');
+    // console.log( getApp().globalData.muse);
      uni.hideLoading();
     this.wugandengluapps();
+    this.getbleshuju(); // 开始获取数据
   },
   mounted(){
+    console.log('this.getbleshuju(); // 开始获取数据');
      this.initChart();
-         this.getbleshuju(); // 开始获取数据
+      // this.getbleshuju(); // 开始获取数据
   },
   onReady() {
     let th = this;
-    uni.getSystemInfo({
-      success: function (res) {
-        const query = uni.createSelectorQuery();
-        query.select('.detectListContent').boundingClientRect();
-        query.exec(function (res2) {
-          th.scrollHeight = res.windowHeight - res2[0].top;
-        });
-      }
-    });
+    // uni.getSystemInfo({
+    //   success: function (res) {
+    //     const query = uni.createSelectorQuery();
+    //     query.select('.detectListContent').boundingClientRect();
+    //     query.exec(function (res2) {
+    //       th.scrollHeight = res.windowHeight - res2[0].top;
+    //     });
+    //   }
+    // });
+  },
+  onUnload() {
+     clearInterval(this.timer);
+     xindianacc((res) => {
+        console.log(res);
+        clearInterval(this.timer);
+     })
   },
   methods: {
 // 父组件中的getbleshuju方法
@@ -144,12 +162,12 @@ export default {
      let index = 0;
      const total = xData.length;
    
-     const timer = setInterval(() => {
+     this.timer = setInterval(() => {
        if (index < total) {
          this.addDataPoint(xData[index], yData[index], zData[index]);
          index++;
        } else {
-         clearInterval(timer);
+         clearInterval(this.timer);
        }
      }, 16); // 每 16ms 显示一个点（≈60FPS）
       })

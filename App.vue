@@ -1,9 +1,14 @@
 <script>
 import { wugandenglu } from '@/api/loginSign/index.js';
 import { mapState, mapMutations } from 'vuex';
+const muses = uni.requireNativePlugin('Muse-Manager');
 export default {
+  globalData: {
+    muse: null
+  },
   onLaunch: function () {
     console.log('App Launch');
+    this.globalData.muse = muses;
   },
   onShow: function () {
     console.log('App Show');
@@ -12,11 +17,16 @@ export default {
   },
   onHide: function () {
     uni.hideLoading();
+    getApp().globalData.muse.disconnect((res) => {
+      console.log('disConnect的回调', res);
+    });
     // uni.setStorageSync('pidian', '');
     // uni.setStorageSync('xindian', '');
     this.setble('');
     this.setxindianble('');
     this.setpidianble('');
+    this.setnaodianble('');
+
     uni.closeBluetoothAdapter({
       success(res) {
         console.log(`关闭蓝牙适配${res}`);
@@ -28,7 +38,8 @@ export default {
     ...mapMutations({
       setble: 'SET_BLE',
       setxindianble: 'SET_XINDIANBLE',
-      setpidianble: 'SET_PIDIANBLE'
+      setpidianble: 'SET_PIDIANBLE',
+      setnaodianble: 'SET_NAODIANBLE'
     }),
     wugandengluapp() {
       wugandenglu()

@@ -23,6 +23,7 @@ export default new Vuex.Store({
     deviceVersion: '',
     xindianble: null,
     pidianble: null,
+    naodianble: null,
     bleConnectState: false,
     barUser: {
       name: '',
@@ -62,6 +63,12 @@ export default new Vuex.Store({
       uni.setStorageSync('xindian', ble);
       console.log('vuex本地中得心电ble设备');
       console.log(uni.getStorageSync('xindian'));
+    },
+    SET_NAODIANBLE: (state, ble = '') => {
+      state.naodianble = ble;
+      uni.setStorageSync('naodian', ble);
+      console.log('vuex本地中得脑电ble设备');
+      console.log(uni.getStorageSync('naodian'));
     },
     SET_PIDIANBLE: (state, ble = '') => {
       state.pidianble = ble;

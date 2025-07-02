@@ -16,3 +16,20 @@ export const updateEdaData = (data) => {
     },
   });
 };
+
+
+// 心电、皮电、脑电上传
+export const ECGEDAEEGData = (data) => {
+  return request({
+    url: "upload_dynamic",
+    method: "POST",
+    urlType: 3,
+    data,
+    header: {
+      // Authorization: `Bearer ${uni.getStorageSync("token")}`
+      "content-type": "application/json",
+      user: "zzu",
+      password: "zzu_api"
+    },
+  });
+};

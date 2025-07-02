@@ -2,8 +2,8 @@
   <view class="content">
     <!-- 按钮部分保持不变 -->
     <button @click="init">1. 初始化</button>
-    <button @click="start">2. 开始监听</button>
-    <button @click="end">停止监听</button>
+    <button @click="start">2. 开始搜索脑电设备</button>
+    <button @click="end">停止监听脑电设备</button>
     <button @click="disConnect">断开连接</button>
     <!-- <button @click="connect('00:55:DA:BB:99:06')">连接</button> -->
     <view class="">设备连接状态: {{ eegStatus }}</view>
@@ -201,7 +201,9 @@ export default {
         const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
         const dataType = parsedData.dataType;
         const data = JSON.parse(parsedData.data);
-
+        console.log('+++++++++++++++++++');
+        console.log(dataType);
+        console.log(data);
         // 根据数据类型添加到不同的缓冲队列
         switch (dataType) {
           case 'ACCELEROMETER':
@@ -332,6 +334,8 @@ export default {
       });
     },
     connect(sn) {
+      this.end();
+      console.log(JSON.stringify({ sn: sn }));
       muse.connect(JSON.stringify({ sn: sn }), (res) => {
         console.log('connect的回调', res);
       });
@@ -353,7 +357,8 @@ export default {
           console.log(muse);
           muse.initMuse((res) => {
             console.log('initMuse 回调:', res);
-            this.data = JSON.stringify(res);
+            // this.data = JSON.stringify(res);
+            this.start();
           });
         },
         fail: () => {
